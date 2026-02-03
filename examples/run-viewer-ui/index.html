@@ -1,0 +1,56 @@
+<!doctype html>
+<!--
+  Autopilot Run Viewer UI (static)
+
+  Business intent:
+  - Keep the viewer UI as static assets (HTML/CSS/JS) so the server can enforce a stricter CSP
+    (no inline scripts/styles) and avoid template-literal escaping footguns.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Autopilot Run Viewer</title>
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title">
+        <h1>Autopilot Run Viewer</h1>
+        <div class="meta">runs/autopilot • local-only</div>
+      </div>
+      <div class="actions">
+        <button id="refresh-runs" class="primary" type="button">Refresh</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside>
+        <div class="list">
+          <div class="list-header">
+            <h2>Runs</h2>
+            <input id="run-filter" type="text" placeholder="Filter runs" />
+          </div>
+          <div id="runs"></div>
+        </div>
+      </aside>
+      <aside>
+        <div class="list">
+          <div class="list-header">
+            <h2>Execs</h2>
+            <input id="exec-filter" type="text" placeholder="Filter execs" />
+          </div>
+          <div id="execs"></div>
+        </div>
+      </aside>
+      <section class="main">
+        <div class="tabs" id="tabs"></div>
+        <div class="panel" id="panel"></div>
+      </section>
+    </div>
+
+    <script type="module" src="/assets/app.js"></script>
+  </body>
+</html>
+
