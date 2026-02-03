@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 import { parseWorkflow } from "../src/workflow/parser.js";
 import { buildStepPrompt, buildWorkflowGenPrompt, buildCompletionCheckPrompt } from "../src/workflow/prompt.js";
+import { resolveDependencyOrder, detectCycle } from "../src/workflow/executor.js";
 import type { StepResult } from "../src/workflow/types.js";
 
 describe("parseWorkflow", () => {
@@ -119,5 +120,57 @@ describe("buildWorkflowGenPrompt", () => {
     const prompt = buildWorkflowGenPrompt("task", 2, "Previous: step1 failed");
     assert.ok(prompt.includes("Context from previous iterations:"));
     assert.ok(prompt.includes("Previous: step1 failed"));
+  });
+});
+
+describe("resolveDependencyOrder", () => {
+  it("returns steps with no deps first", () => {
+    const steps = [
+      { id: "b", type: "agent.run" as const, goal: "b", dependsOn: ["a"] },
+      { id: "a", type: "agent.run" as const, goal: "a" },
+    ];
+    const waves = resolveDependencyOrder(steps);
+    assert.strictEqual(waves[0][0].id, "a");
+    assert.strictEqual(waves[1][0].id, "b");
+  });
+
+  it("groups parallel steps in same wave", () => {
+    const steps = [
+      { id: "a", type: "agent.run" as const, goal: "a" },
+      { id: "b", type: "agent.run" as const, goal: "b" },
+      { id: "c", type: "agent.run" as const, goal: "c", dependsOn: ["a", "b"] },
+    ];
+    const waves = resolveDependencyOrder(steps);
+    assert.strictEqual(waves[0].length, 2); // a and b parallel
+    assert.strictEqual(waves[1].length, 1); // c after
+  });
+
+  it("throws on circular dependency", () => {
+    const steps = [
+      { id: "a", type: "agent.run" as const, goal: "a", dependsOn: ["b"] },
+      { id: "b", type: "agent.run" as const, goal: "b", dependsOn: ["a"] },
+    ];
+    assert.throws(() => resolveDependencyOrder(steps), /circular/i);
+  });
+});
+
+describe("detectCycle", () => {
+  it("returns null for valid DAG", () => {
+    const steps = [
+      { id: "a", type: "agent.run" as const, goal: "a" },
+      { id: "b", type: "agent.run" as const, goal: "b", dependsOn: ["a"] },
+    ];
+    assert.strictEqual(detectCycle(steps), null);
+  });
+
+  it("returns cycle path for circular deps", () => {
+    const steps = [
+      { id: "a", type: "agent.run" as const, goal: "a", dependsOn: ["c"] },
+      { id: "b", type: "agent.run" as const, goal: "b", dependsOn: ["a"] },
+      { id: "c", type: "agent.run" as const, goal: "c", dependsOn: ["b"] },
+    ];
+    const cycle = detectCycle(steps);
+    assert.ok(cycle !== null);
+    assert.ok(cycle.length >= 2);
   });
 });
