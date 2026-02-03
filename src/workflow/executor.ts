@@ -14,7 +14,6 @@ export function resolveDependencyOrder(steps: WorkflowStep[]): WorkflowStep[][] 
     throw new Error(`Circular dependency detected: ${cycle.join(" → ")}`);
   }
 
-  const byId = new Map(steps.map((s) => [s.id, s]));
   const completed = new Set<string>();
   const waves: WorkflowStep[][] = [];
 

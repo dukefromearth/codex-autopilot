@@ -5,7 +5,7 @@
  */
 
 import type { AgentAdapter } from "./adapters/types.js";
-import type { Workflow, StepResult, CompletionCheck } from "./workflow/types.js";
+import type { Workflow, WorkflowStep, StepResult, CompletionCheck } from "./workflow/types.js";
 import type { RunManifest, RunContext, RunOptions, RunState } from "./state/types.js";
 import { parseWorkflow, normalizeWorkflow } from "./workflow/parser.js";
 import {
@@ -275,7 +275,7 @@ async function executeStep(
   context: RunContext,
   manifest: RunManifest
 ): Promise<StepResult> {
-  const prompt = buildStepPrompt(step as any, completed, task);
+  const prompt = buildStepPrompt(step as WorkflowStep, completed, task);
   const execId = allocateExecId(context);
   const label = `step:${step.id}`;
   const startedAt = new Date().toISOString();
@@ -411,9 +411,15 @@ async function checkCompletion(
   }
 
   const reason = String(obj.reason ?? "Not done.");
-  const nextWorkflow = obj.nextWorkflow
-    ? normalizeWorkflow(obj.nextWorkflow)
-    : undefined;
+  let nextWorkflow: Workflow | undefined;
+  if (obj.nextWorkflow) {
+    try {
+      nextWorkflow = normalizeWorkflow(obj.nextWorkflow);
+    } catch (e) {
+      console.warn(`[autopilot] Invalid nextWorkflow in completion check: ${e}`);
+      nextWorkflow = undefined;
+    }
+  }
 
   return {
     completion: { done: false, reason, nextWorkflow },

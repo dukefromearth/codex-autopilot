@@ -11,5 +11,5 @@
     "resolveJsonModule": true,
     "lib": ["ES2022"]
   },
-  "include": ["examples", "tests"]
+  "include": ["src", "examples", "tests"]
 }
