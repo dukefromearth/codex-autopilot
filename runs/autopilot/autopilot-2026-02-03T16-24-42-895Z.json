@@ -1,0 +1,81 @@
+{
+  "task": "Fix the remaining correctness issue in examples/codex-autopilot.ts provenance graph: transcript-derived spawn/interact edges must be stable and non-duplicated across multiple execs and resume. Requirements: (1) Make transcript enrichment idempotent per threadId per autopilot run (cache which threadIds/transcripts have been parsed so re-enrichment doesn't re-add edges). (2) Ensure transcript-derived edges always map to stable thread nodes (thread:<threadId>) for from/to, not exec nodes, so node IDs don't flip when a thread later has multiple execs. (3) Deduplicate transcript edges primarily by call_id + event type + sender/target threadId + status (prompt text should not be part of the dedup identity). (4) Keep current manifest.graph schema but update edge recording accordingly; record warnings for missing transcripts and any unexpected duplicate call_id collisions. (5) Update docs/run-data-ui.md to describe the stable mapping and dedup rules for transcript-derived edges. (6) No new deps; minimal focused change. (7) Run npm run typecheck and report results.",
+  "model": "gpt-5.2-codex",
+  "effort": "high",
+  "unsafe": false,
+  "search": false,
+  "iterations": [
+    {
+      "index": 1,
+      "workflow": {
+        "version": 1,
+        "id": "fix-transcript-edges-idempotent",
+        "steps": [
+          {
+            "id": "implement",
+            "type": "agent.run",
+            "goal": "use the task-executor skill. Fix examples/codex-autopilot.ts transcript-derived provenance edges to be idempotent per threadId per autopilot run, map to stable thread:<threadId> nodes, dedupe by call_id+event type+sender/target threadId+status, record warnings for missing transcripts and duplicate call_id collisions, keep manifest.graph schema, update docs/run-data-ui.md, and avoid new deps."
+          },
+          {
+            "id": "verify",
+            "type": "agent.run",
+            "goal": "use the tester skill. Run npm run typecheck and report results.",
+            "dependsOn": [
+              "implement"
+            ]
+          },
+          {
+            "id": "review",
+            "type": "agent.run",
+            "goal": "use the reviewer skill. Review for correctness, regressions, and missing tests with focus on provenance edge stability/dedup and the docs update.",
+            "dependsOn": [
+              "verify"
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "stepId": "implement",
+          "status": "succeeded",
+          "execId": "exec-002",
+          "threadId": "019c2452-728d-72d3-89cc-e8ca90eee6ca",
+          "outputText": "1) Objective\n- Fix transcript-derived provenance edges to be idempotent, stable on thread nodes, deduped correctly, and documented.\n\n2) Plan to execute\n- Inspect autopilot provenance graph handling and transcript parsing.\n- Implement idempotent transcript enrichment, stable thread mapping, and dedupe rules with warnings.\n- Update documentation and run typecheck.\n\n3) Changes\n- `examples/codex-autopilot.ts`: added per-run transcript caching, stable thread node mapping for transcript edges, dedupe key override, and call_id collision warnings.\n- `docs/run-data-ui.md`: documented stable thread mapping, idempotent transcript enrichment, dedupe identity, and warning behavior.\n\n4) Verification\n- `npm run typecheck`\n\n5) Results\n- Done: transcript-derived edges now map to `thread:<thread_id>` nodes, are idempotent per thread per run, and dedupe by call_id + event type + sender/target thread_id + status with collision warnings.\n- Risks: none known; behavior depends on transcript event shape consistency.\n\n6) Questions / blockers\n- None",
+          "usage": {
+            "input_tokens": 360662,
+            "cached_input_tokens": 313472,
+            "output_tokens": 6009
+          }
+        },
+        {
+          "stepId": "verify",
+          "status": "succeeded",
+          "execId": "exec-003",
+          "threadId": "019c2454-851a-7303-9ad4-03edeecfcc68",
+          "outputText": "1) Objective\n- Run the repository typecheck to verify changes compile cleanly.\n\n2) Verification plan\n- Run `npm run typecheck`.\n\n3) Commands run\n- `npm run typecheck`\n\n4) Results\n- Pass. `tsc -p tsconfig.json --noEmit` completed with exit code 0.\n\n5) Gaps / next steps\n- None.\n\nDone: typecheck passes. Remaining risks: none observed.",
+          "usage": {
+            "input_tokens": 43549,
+            "cached_input_tokens": 29696,
+            "output_tokens": 314
+          }
+        },
+        {
+          "stepId": "review",
+          "status": "succeeded",
+          "execId": "exec-004",
+          "threadId": "019c2454-c031-7893-ae7b-44baf00b6e8b",
+          "outputText": "Using reviewer skill: focusing on provenance edge stability/dedup + docs update.\n\n1) Findings (ordered by severity)\n- None.\n\n2) Missing tests or verification gaps\n- Add a unit/integration test that parses a transcript twice in the same run and asserts no duplicate `spawn`/`interact` edges (idempotent enrichment).\n- Add a test that introduces duplicate transcript events with the same `call_id` but different sender/target/status and asserts a warning is recorded.\n- Add a test that a thread with a single exec still yields transcript edges that reference `thread:<id>` nodes (stable mapping even if exec count changes later).\n\n3) Questions / assumptions\n- None.\n\n4) Summary\n- Transcript enrichment in `examples/codex-autopilot.ts` looks aligned with requirements: thread-node mapping, idempotent per-thread parsing, and dedupe by call_id + event type + sender/target + status. (`examples/codex-autopilot.ts`)\n- Docs update clearly describes stable mapping and dedup rules for transcript-derived edges. (`docs/run-data-ui.md`)\n- Review scope limited to the two files above; other modified files were not reviewed.\n\nDone: No correctness/regression issues found in the reviewed scope. Remaining risks: missing tests for transcript dedup/idempotency and call_id collision warnings.",
+          "usage": {
+            "input_tokens": 184283,
+            "cached_input_tokens": 146176,
+            "output_tokens": 2578
+          }
+        }
+      ],
+      "completion": {
+        "done": true,
+        "summary": "Review complete. Findings (ordered by severity): None. Missing tests or verification gaps: add tests for transcript idempotency, call_id collision warning, and thread-node mapping stability. Questions / assumptions: None. Summary: transcript-derived edges now map to thread nodes, are idempotent per thread per run, and dedupe by call_id + event type + sender/target + status; docs updated; npm run typecheck passed."
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+1) Findings (ordered by severity)
+- examples/codex-autopilot.ts:282-305, 856-866, 961-997 `recordInvokesEdges` (and `recordCompletionToWorkflowEdge`) update the graph after the last `codexExec` write; there is no subsequent `writeManifest()` before the final `manifest.json` write on completion — impact: the final manifest can miss `invokes` edges for the last iteration (and any completion→next workflow edge) — suggested fix: call `writeManifest(captureContext)` after `recordInvokesEdges(...)` and after `recordCompletionToWorkflowEdge(...)`, or call `syncGraphToManifest()` before the final `writeFile(runManifestPath, ...)`.
+- examples/codex-autopilot.ts:424-477, 961-995 When a step exec fails, `codexExec` throws and the caller records `execId: "unknown"`, so `invokes` and `dependsOn` edges skip that step even though a manifest exec entry exists — impact: missing edges for failed step execs, which violates the “record invokes edges for each step exec” requirement and makes the call graph incomplete — suggested fix: have `codexExec` return `{ execId, ... }` on non‑zero exit (with status/error) instead of throwing, or throw a typed error that includes `execId` so the caller can propagate it into `StepResult`.
+- examples/codex-autopilot.ts:302-305 The completion path writes `manifest.json` directly without syncing the in‑memory graph (`syncGraphToManifest`) — impact: graph changes made since the last `writeManifest()` call may be lost even if you fix the timing above — suggested fix: reuse `writeManifest(captureContext)` or call `syncGraphToManifest()` before the final `writeFile`.
+
+2) Missing tests or verification gaps
+- No coverage for manifest graph edges (dependsOn/invokes/resume/spawn/interact) or for prompt/argv capture artifacts.
+- No coverage for failure paths where `codexExec` throws but artifacts/manifest still need to be linked to steps.
+- I did not re-run `npm run typecheck` or any tests during this review.
+
+3) Questions / assumptions
+- Assumption: Only `examples/codex-autopilot.ts` and `docs/run-data-ui.md` are in scope for this review; other modified files were not reviewed.
+
+4) Summary
+- Core capture/manifest structure looks aligned with requirements and docs.
+- Main risk: graph edges can be missing in the final manifest due to timing/sync gaps.
+- Step-failure execs lose `execId`, so graph edges don’t reference failed step execs.
+
+Done — reviewed autopilot capture changes. Remaining risks: final manifest may omit invoke edges; failed step execs are not linked in the graph; missing tests for manifest/graph behavior.

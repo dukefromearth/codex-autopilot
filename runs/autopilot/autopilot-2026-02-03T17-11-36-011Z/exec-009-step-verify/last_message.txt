@@ -1,0 +1,19 @@
+1) Objective
+- Run required verification for the MVP run viewer UI changes (typecheck and tests).
+
+2) Verification plan
+- Run `npm run typecheck`.
+- Run `npm run test` because behavior changed.
+
+3) Commands run
+- `npm run typecheck`
+- `npm run test`
+
+4) Results
+- Pass. Typecheck succeeded.
+- Pass. Tests succeeded (67/67).
+
+5) Gaps / next steps
+- None.
+
+Done: Typecheck and test suite passed; no remaining risks from verification.

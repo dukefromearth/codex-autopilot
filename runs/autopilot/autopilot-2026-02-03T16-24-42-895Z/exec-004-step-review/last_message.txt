@@ -1,0 +1,19 @@
+Using reviewer skill: focusing on provenance edge stability/dedup + docs update.
+
+1) Findings (ordered by severity)
+- None.
+
+2) Missing tests or verification gaps
+- Add a unit/integration test that parses a transcript twice in the same run and asserts no duplicate `spawn`/`interact` edges (idempotent enrichment).
+- Add a test that introduces duplicate transcript events with the same `call_id` but different sender/target/status and asserts a warning is recorded.
+- Add a test that a thread with a single exec still yields transcript edges that reference `thread:<id>` nodes (stable mapping even if exec count changes later).
+
+3) Questions / assumptions
+- None.
+
+4) Summary
+- Transcript enrichment in `examples/codex-autopilot.ts` looks aligned with requirements: thread-node mapping, idempotent per-thread parsing, and dedupe by call_id + event type + sender/target + status. (`examples/codex-autopilot.ts`)
+- Docs update clearly describes stable mapping and dedup rules for transcript-derived edges. (`docs/run-data-ui.md`)
+- Review scope limited to the two files above; other modified files were not reviewed.
+
+Done: No correctness/regression issues found in the reviewed scope. Remaining risks: missing tests for transcript dedup/idempotency and call_id collision warnings.

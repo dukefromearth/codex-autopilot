@@ -1,0 +1,28 @@
+1) Objective
+- Smoke-test latest autopilot run artifacts to confirm `manifest.json` and per-exec `events.jsonl`, `stderr.txt`, `last_message.txt` exist, read-only.
+
+2) Verification plan
+- Identify latest `runs/autopilot/autopilot-*` directory by timestamp.
+- Confirm `manifest.json` exists at run root.
+- For each `exec-*` directory, check presence of `events.jsonl`, `stderr.txt`, `last_message.txt`.
+- Run `npm run typecheck` per repo guidance.
+
+3) Commands run
+- `ls -td runs/autopilot/autopilot-* | head -1`
+- `ls -1 runs/autopilot/autopilot-2026-02-03T03-55-23-666Z`
+- `for d in runs/autopilot/autopilot-2026-02-03T03-55-23-666Z/exec-*; do echo "$d"; for f in events.jsonl stderr.txt last_message.txt; do if [ -f "$d/$f" ]; then echo "  ok: $f"; else echo "  MISSING: $f"; fi; done; done`
+- `npm run typecheck`
+
+4) Results
+- Pass with one issue: `manifest.json` exists at `runs/autopilot/autopilot-2026-02-03T03-55-23-666Z/manifest.json`.
+- `exec-001-workflow-gen-iteration-1`: `events.jsonl`, `stderr.txt`, `last_message.txt` present.
+- `exec-002-step-discover`: `events.jsonl`, `stderr.txt`, `last_message.txt` present.
+- `exec-003-step-verify`: `events.jsonl`, `stderr.txt` present; `last_message.txt` missing.
+- `npm run typecheck` passed.
+
+5) Gaps / next steps
+- None.
+
+Done summary
+- Artifacts present: `runs/autopilot/autopilot-2026-02-03T03-55-23-666Z/manifest.json`; `exec-001-workflow-gen-iteration-1` and `exec-002-step-discover` include all three artifacts; `exec-003-step-verify` missing `last_message.txt`.
+- Remaining risk: latest run artifacts may be partial for `exec-003-step-verify` due to missing `last_message.txt`.

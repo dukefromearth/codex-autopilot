@@ -1,0 +1,150 @@
+{
+  "id": "hitl_9578e5e3-1015-468d-8adc-5c728db60896",
+  "createdAt": "2026-02-02T20:34:32.291Z",
+  "updatedAt": "2026-02-02T20:59:43.739Z",
+  "goal": "anything in this library that doesn't reall make sense to have?",
+  "parentRunId": "72041607-b68f-435a-b3dc-8f658e3718b4",
+  "gate": {
+    "required": true,
+    "assignee": "human",
+    "questions": [
+      "Codex MCP adapter: implement in-core now, or remove all “shipped/feature complete” claims and treat as out-of-scope (or “planned plugin”)?",
+      "Docs vs behavior: should we delete `--ui`/`HITL_DECISION_MAKER` docs (preferred for minimalism) or re-add those features?",
+      "Public API: is it acceptable to make breaking changes by slimming `src/index.ts` exports and removing legacy options/types (`HitlOptions.enabled`, `stopAfterPlanner`) from the public surface?",
+      "Repo contents: should `deep-research/` remain in this repo (moved/linked under `docs/`) or be removed/moved elsewhere?"
+    ],
+    "rationale": "These decisions determine whether we ship new functionality vs. remove claims, and whether we allow breaking surface changes to achieve “minimal scaffold”. They also decide what content belongs in the repository long-term.",
+    "sources": [
+      "docs/feature-complete.md",
+      "docs/audit/feature-inventory.md",
+      "README.md",
+      "examples/README.md",
+      "src/index.ts",
+      "docs/developer-workflow-dx.md",
+      "deep-research/coupling-map.md"
+    ]
+  },
+  "tasks": [
+    {
+      "goal": "Decide scope for Codex MCP adapter, then make docs truthful (implement it or remove/mark as planned plugin)",
+      "expectedFiles": [
+        "docs/feature-complete.md",
+        "docs/audit/feature-inventory.md",
+        "docs/architecture.md",
+        "docs/developer-workflow-dx.md",
+        "docs/adapters.md",
+        "README.md"
+      ],
+      "priority": "critical",
+      "rationale": "This is the most user-visible correctness issue; it also determines whether follow-on work is code implementation vs. documentation cleanup.",
+      "sources": [
+        "docs/feature-complete.md",
+        "docs/audit/feature-inventory.md",
+        "docs/architecture.md",
+        "docs/developer-workflow-dx.md",
+        "docs/adapters.md"
+      ],
+      "agent": {
+        "agentId": "human"
+      }
+    },
+    {
+      "goal": "Remove stale CLI docs (`--ui`, `HITL_DECISION_MAKER`) or reintroduce those features",
+      "expectedFiles": [
+        "README.md",
+        "examples/README.md",
+        "docs/developer-workflow-dx.md",
+        "src/cli/live.ts"
+      ],
+      "priority": "high",
+      "rationale": "Current docs instruct broken workflows; fixing reduces confusion immediately.",
+      "sources": [
+        "README.md",
+        "examples/README.md",
+        "src/cli/live.ts"
+      ],
+      "agent": {
+        "agentId": "agent",
+        "profileId": "task-executor"
+      }
+    },
+    {
+      "goal": "Drop unused `vscode` dependency (or justify by adding real usage)",
+      "expectedFiles": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "priority": "high",
+      "rationale": "Aligns dependency graph with “minimal scaffold” positioning; reduces footprint and maintenance surface.",
+      "sources": [
+        "package.json"
+      ],
+      "agent": {
+        "agentId": "agent",
+        "profileId": "task-executor"
+      }
+    },
+    {
+      "goal": "Create `docs/audit/removal-candidates.md` as the single source of truth and link it from audit README",
+      "expectedFiles": [
+        "docs/audit/removal-candidates.md",
+        "docs/audit/README.md",
+        "docs/developer-workflow-dx.md"
+      ],
+      "priority": "high",
+      "rationale": "Prevents future drift by moving an “approved plan” from narrative DX docs into an auditable artifact with statuses, criteria, and ticket links.",
+      "sources": [
+        "docs/audit/README.md",
+        "docs/developer-workflow-dx.md"
+      ],
+      "agent": {
+        "agentId": "agent",
+        "profileId": "task-planner"
+      }
+    },
+    {
+      "goal": "Decide whether to slim `src/index.ts` exports (smaller stable surface; deep imports for advanced modules)",
+      "expectedFiles": [
+        "src/index.ts",
+        "docs/architecture.md"
+      ],
+      "priority": "medium",
+      "rationale": "Broad exports increase long-term coupling; changing exports may be breaking, so intent should be explicit.",
+      "sources": [
+        "src/index.ts",
+        "docs/architecture.md"
+      ],
+      "agent": {
+        "agentId": "human"
+      }
+    },
+    {
+      "goal": "Decide what to do with `deep-research/` (move under `docs/` + link, move to `tickets/`, or remove)",
+      "expectedFiles": [
+        "README.md",
+        "docs/architecture.md"
+      ],
+      "priority": "medium",
+      "rationale": "If it’s intended to ship, it should be curated/discoverable; if not, it’s repo noise relative to “minimal scaffold”.",
+      "sources": [
+        "README.md"
+      ],
+      "agent": {
+        "agentId": "human"
+      }
+    }
+  ],
+  "answers": {
+    "q1": "Remove all claims from docs as if it never existed",
+    "q2": "Remove all --ui/HITL_DECISION_MAKER doc",
+    "q3": "If the feature doesn't exist, it should be removed",
+    "q4": "Do nothing; leave deep-research/ as-is for now",
+    "Codex MCP adapter: implement in-core now, or remove all “shipped/feature complete” claims and treat as out-of-scope (or “planned plugin”)?": "Remove all claims from docs as if it never existed",
+    "Docs vs behavior: should we delete `--ui`/`HITL_DECISION_MAKER` docs (preferred for minimalism) or re-add those features?": "Remove all --ui/HITL_DECISION_MAKER doc",
+    "Public API: is it acceptable to make breaking changes by slimming `src/index.ts` exports and removing legacy options/types (`HitlOptions.enabled`, `stopAfterPlanner`) from the public surface?": "If the feature doesn't exist, it should be removed",
+    "Repo contents: should `deep-research/` remain in this repo (moved/linked under `docs/`) or be removed/moved elsewhere?": "Do nothing; leave deep-research/ as-is for now"
+  },
+  "metadata": {
+    "synthesisMode": "llm"
+  }
+}

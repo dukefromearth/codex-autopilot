@@ -1,0 +1,27 @@
+use the reviewer skill. Review for correctness, regressions, and missing tests with focus on provenance edge stability/dedup and the docs update.
+
+Overall task: Fix the remaining correctness issue in examples/codex-autopilot.ts provenance graph: transcript-derived spawn/interact edges must be stable and non-duplicated across multiple execs and resume. Requirements: (1) Make transcript enrichment idempotent per threadId per autopilot run (cache which threadIds/transcripts have been parsed so re-enrichment doesn't re-add edges). (2) Ensure transcript-derived edges always map to stable thread nodes (thread:<threadId>) for from/to, not exec nodes, so node IDs don't flip when a thread later has multiple execs. (3) Deduplicate transcript edges primarily by call_id + event type + sender/target threadId + status (prompt text should not be part of the dedup identity). (4) Keep current manifest.graph schema but update edge recording accordingly; record warnings for missing transcripts and any unexpected duplicate call_id collisions. (5) Update docs/run-data-ui.md to describe the stable mapping and dedup rules for transcript-derived edges. (6) No new deps; minimal focused change. (7) Run npm run typecheck and report results.
+
+Dependency outputs (copy/paste; may be long):
+
+--- verify (succeeded) ---
+
+1) Objective
+- Run the repository typecheck to verify changes compile cleanly.
+
+2) Verification plan
+- Run `npm run typecheck`.
+
+3) Commands run
+- `npm run typecheck`
+
+4) Results
+- Pass. `tsc -p tsconfig.json --noEmit` completed with exit code 0.
+
+5) Gaps / next steps
+- None.
+
+Done: typecheck passes. Remaining risks: none observed.
+
+If you make code changes, run the most relevant checks/tests and report results.
+Finish with a short 'Done' summary and any remaining risks.

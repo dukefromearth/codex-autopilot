@@ -1,0 +1,38 @@
+use the reviewer skill.
+
+Task: Implement an MVP run viewer UI for autopilot captures. Requirements: (1) Add a zero-deps viewer: a tiny Node HTTP server in examples/run-viewer.ts that serves a static HTML UI (no build step) and JSON APIs. (2) The UI information architecture must be: Run list (left) -> Exec list (middle) -> main panel with tabs: Overview, Graph, Output, Prompt, Events, Stderr, Transcript (Supplemental). (3) APIs (read-only, stream large files): GET /api/runs (scan runs/autopilot/*/manifest.json), GET /api/runs/:runId/manifest, GET /api/runs/:runId/file?path=<manifest-relative> (must validate path stays within the run folder), optional GET /api/transcript/:threadId (best-effort resolve ~/.codex/sessions/**/rollout-*-<threadId>.jsonl and stream it; if missing, return 404 with friendly message). Add a --codex-home flag to override default ~/.codex for transcripts. (4) In the UI, add 'Copy resume command' and 'Copy open transcript path' buttons where applicable. Resume command format: codex exec resume <threadId> "<prompt>". (5) Events tab: render events.jsonl incrementally (not loading entire file), with filter by event.type and text search. (6) Graph tab: render manifest.graph (nodes/edges) in a simple but clear way (table view is acceptable; optional SVG). Clicking a node jumps to the related exec and tab. (7) Update docs/run-data-ui.md with viewer usage: how to run it, what it reads, what is canonical vs supplemental, and security notes about serving local files. (8) No new runtime deps, minimal changes, do not change public APIs. (9) Run npm run typecheck and report results in final summary. If you touch tests or behavior, run npm run test.
+Iteration: 3
+
+Here are the workflow results (JSON):
+{
+  "workflowId": "mvp-run-viewer-ui-iteration-3",
+  "results": [
+    {
+      "stepId": "implement",
+      "status": "succeeded",
+      "threadId": "019c248c-f443-7da3-aa4b-c62183c79b9e",
+      "output": "1) Objective\n- Fix reviewer findings for the run viewer by adding abortable event streaming, strict route parsing, early 404s for missing files, and add minimal tests (plus docs update).\n\n2) Plan to execute\n- Tighten route parsing and file/transcript handling in `examples/run-viewer.ts`.\n- Add abortable event stream logic in the UI script.\n- Add minimal tests for traversal, transcript lookup with `--codex-home`, and abort logic.\n- Update docs and run required checks.\n\n3) Changes\n- `examples/run-viewer.ts`: strict route parsing, early `stat` checks for 404s, abortable event streaming in UI, exported helpers, and main-module guard.\n- `tests/runViewer.test.ts`: new tests for traversal rejection, transcript lookup with codex home, and event reload abort presence.\n- `docs/run-data-ui.md`: documented viewer API surface.\n\n4) Verification\n- `npm run typecheck`\n- `npm run test`\n\n5) Results\n- Typecheck and tests pass.\n- Viewer now aborts stale event streams, routes are strictly parsed, and missing files return 404 before streaming.\n- Tests cover traversal rejection, codex-home transcript lookup, and event abort logic (string-based check).\n\n6) Questions / blockers\n- None.\n\nDone. Summary: Added strict routing + early 404s, AbortController-driven event reload cancellation, new tests, and updated run viewer docs. Remaining risk: the event reload abort test asserts HTML content (not runtime behavior), so it won’t catch future DOM wiring regressions."
+    },
+    {
+      "stepId": "verify",
+      "status": "succeeded",
+      "threadId": "019c2491-2c2e-74d0-ba5b-9da7e7a3c117",
+      "output": "1) Objective\n- Run `npm run typecheck` and `npm run test`, then report results and any failures or gaps.\n\n2) Verification plan\n- Run `npm run typecheck`\n- Run `npm run test`\n\n3) Commands run\n- `npm run typecheck`\n- `npm run test`\n\n4) Results\n- `npm run typecheck` passed.\n- `npm run test` passed (70 tests, 0 failures).\n\n5) Gaps / next steps\n- None.\n\nDone. Remaining risk: none."
+    },
+    {
+      "stepId": "review",
+      "status": "succeeded",
+      "threadId": "019c2491-71a2-7890-b92c-c6f4ea295a39",
+      "output": "1) Findings (ordered by severity)\n- `examples/run-viewer.ts:1016-1045` Path traversal check uses `path.resolve` + prefix match but does not guard against symlink escapes inside the run directory — a crafted artifact path or symlink in `runs/autopilot/<runId>` can expose files outside the run folder if the server is reachable. Suggested fix: resolve both the run directory and target with `fs.realpath` (or reject symlinks via `lstat`) and ensure the target realpath is within the run dir realpath before streaming.\n\n2) Missing tests or verification gaps\n- No tests for `/api/runs` listing (ordering, empty dir) or `/api/runs/:runId/manifest` success path.\n- No tests for the resume command formatting (escaping) or transcript 404 “friendly message” body.\n\n3) Questions / assumptions\n- None.\n\n4) Summary\n- Main risk is symlink-based path escape in the run file streaming endpoint.\n- Otherwise the MVP viewer and API surface look consistent with the stated requirements.\n- Tests reported by the user were not re-run by me; I’m relying on the provided output.\n\nDone. Remaining risks: symlink escape in `GET /api/runs/:runId/file` until mitigated."
+    }
+  ]
+}
+
+Return JSON ONLY with one of these shapes:
+1) {"done":true,"summary":"..."}
+2) {"done":false,"reason":"...","nextWorkflow":{...workflow json...}}
+
+Rules:
+- Be strict: done=true only if the task is actually completed.
+- If not done, provide a small nextWorkflow (<= 6 steps) that finishes the remaining work.
+- nextWorkflow steps should begin with: "use the <skill> skill."

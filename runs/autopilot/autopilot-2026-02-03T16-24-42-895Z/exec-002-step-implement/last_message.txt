@@ -1,0 +1,21 @@
+1) Objective
+- Fix transcript-derived provenance edges to be idempotent, stable on thread nodes, deduped correctly, and documented.
+
+2) Plan to execute
+- Inspect autopilot provenance graph handling and transcript parsing.
+- Implement idempotent transcript enrichment, stable thread mapping, and dedupe rules with warnings.
+- Update documentation and run typecheck.
+
+3) Changes
+- `examples/codex-autopilot.ts`: added per-run transcript caching, stable thread node mapping for transcript edges, dedupe key override, and call_id collision warnings.
+- `docs/run-data-ui.md`: documented stable thread mapping, idempotent transcript enrichment, dedupe identity, and warning behavior.
+
+4) Verification
+- `npm run typecheck`
+
+5) Results
+- Done: transcript-derived edges now map to `thread:<thread_id>` nodes, are idempotent per thread per run, and dedupe by call_id + event type + sender/target thread_id + status with collision warnings.
+- Risks: none known; behavior depends on transcript event shape consistency.
+
+6) Questions / blockers
+- None

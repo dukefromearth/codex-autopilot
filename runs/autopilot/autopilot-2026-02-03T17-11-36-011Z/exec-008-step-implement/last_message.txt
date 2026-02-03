@@ -1,0 +1,27 @@
+1) Objective
+- Fix security and performance gaps in `examples/run-viewer.ts`, validate runId traversal, and update `docs/run-data-ui.md` accordingly, with required checks run.
+
+2) Plan to execute
+- Inspect `examples/run-viewer.ts` and `docs/run-data-ui.md`.
+- Harden UI rendering against XSS and fix resume command escaping.
+- Improve events streaming performance and validate runId.
+- Update docs for security behavior.
+- Run `npm run typecheck` and `npm run test`.
+
+3) Changes
+- `examples/run-viewer.ts`: render manifest-derived UI via DOM text nodes (no `innerHTML` for untrusted data), shell-escape resume prompt safely for double-quoted POSIX strings, batch event streaming output to avoid quadratic DOM updates, and validate `runId` before filesystem access.
+- `docs/run-data-ui.md`: document viewer security behavior and resume command quoting expectations.
+
+4) Verification
+- `npm run typecheck`
+- `npm run test`
+
+5) Results
+- XSS exposure removed for manifest-derived UI content, resume command is shell-safe for double-quoted POSIX usage, events streaming is incremental without O(n^2) DOM writes, and runId traversal is blocked.
+- Typecheck and tests passed.
+
+6) Questions / blockers
+- None
+
+Done: Secured viewer UI rendering and file access, improved events streaming performance, and updated docs.  
+Risks: Transcript lookup still relies on best-effort filesystem discovery; unusual shell environments may still require manual review before running copied resume commands.

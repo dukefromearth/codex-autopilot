@@ -1,0 +1,16 @@
+1) Objective
+- Run `npm run typecheck` and report results.
+
+2) Verification plan
+- Run TypeScript typecheck via npm script.
+
+3) Commands run
+- `npm run typecheck`
+
+4) Results
+- Pass. `tsc -p tsconfig.json --noEmit` exited with code 0.
+
+5) Gaps / next steps
+- None.
+
+Done. No remaining risks from this check.

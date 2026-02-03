@@ -1,0 +1,23 @@
+1) Research question  
+- Scan the repo to understand run data layout, existing examples/docs, and identify files/paths to touch for the run viewer UI requirements.
+
+2) Sources consulted  
+- `docs/run-data-ui.md`  
+- `examples/codex-autopilot.ts`  
+- `runs/autopilot/` (sample run folders)
+
+3) Findings  
+- The canonical description of autopilot run capture layout and manifest schema is documented in `docs/run-data-ui.md`, including the `runs/autopilot/<runId>/manifest.json` index and per-exec artifacts (`events.jsonl`, `stderr.txt`, `last_message.txt`, `prompt.txt`, `argv.json`, optional `schema.json`). `manifest.graph` includes nodes/edges/warnings for a lightweight provenance graph. citedocs/run-data-ui.md  
+- The autopilot runner in `examples/codex-autopilot.ts` defines the `RunManifest` and `GraphNode/GraphEdge` shapes and writes `manifest.json` into `runs/autopilot/<runId>/`, with `execs[].artifacts.*` being relative paths to the run folder. It also captures `events.jsonl` as raw stdout JSONL and `stderr.txt`, and it best-effort scans `~/.codex/sessions/**/rollout-*-<threadId>.jsonl` to enrich `manifest.graph`, recording warnings if transcripts are missing. citeexamples/codex-autopilot.ts  
+- The repo contains real captured runs under `runs/autopilot/` with the expected folder structure (run directory containing `manifest.json` and `exec-*` folders). This confirms the on-disk layout the viewer will read. citeruns/autopilot  
+
+4) Implications for the task  
+- The run viewer should treat `runs/autopilot/*/manifest.json` as the entry point for listing runs and navigation; artifact paths should always be resolved relative to the run folder as documented.  
+- The optional transcript lookup API can mirror the autopilot logic that scans `~/.codex/sessions/**/rollout-*-<threadId>.jsonl` and selects the newest match; this behavior is already established in `examples/codex-autopilot.ts`.  
+- UI tab content should be derived from manifest fields: `execs[].artifacts` for output/prompt/stderr/events; `graph` for the Graph tab.
+
+5) Open questions  
+- None.
+
+6) Assumptions  
+- None.

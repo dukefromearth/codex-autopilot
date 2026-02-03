@@ -1,0 +1,13 @@
+1) Findings (ordered by severity)
+- `examples/run-viewer.ts:1055` TOCTOU window after `realpath` validation allows an attacker with write access to swap the file between `realpath()` and `createReadStream()` — Potential symlink/hardlink swap could expose unintended files if the run directory is writable by untrusted users — Consider opening the file by descriptor after `realpath` and validating the opened inode is still within `runDir`, or re-`realpath` immediately before `createReadStream` and compare `stat` on the opened FD when feasible.
+- `examples/run-viewer.ts:1103` `x-transcript-path` and meta endpoint disclose absolute filesystem paths — If the server is reachable beyond localhost, this is sensitive path disclosure — Ensure docs and usage encourage binding to `127.0.0.1` only; optionally gate the header/meta behind a `--allow-path-leak` or similar flag.
+
+2) Missing tests or verification gaps
+- None for the new symlink escape guard; coverage exists. Optional: add a test for absolute `path=` rejection if you want explicit coverage.
+
+3) Questions / assumptions
+- None.
+
+4) Summary
+- The new `realpath` + containment checks materially reduce traversal and symlink escape risk for run artifacts.
+- Remaining risks are primarily TOCTOU swaps in writable directories and path disclosure if the viewer is exposed beyond localhost.

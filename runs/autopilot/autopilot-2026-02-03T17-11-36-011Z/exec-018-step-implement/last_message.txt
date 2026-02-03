@@ -1,0 +1,26 @@
+1) Objective
+- Use task-executor skill to harden run file path validation against symlink escapes while keeping the run viewer MVP intact.
+
+2) Plan to execute
+- Inspect `examples/run-viewer.ts` and related tests/docs.
+- Implement realpath-based containment checks for run file access.
+- Update tests/docs as needed and run required checks.
+
+3) Changes
+- `examples/run-viewer.ts`: Hardened `/api/runs/:runId/file` validation with absolute-path rejection, `realpath` containment checks, and symlink escape blocking.
+- `tests/runViewer.test.ts`: Added coverage for symlink escape attempts.
+- `docs/run-data-ui.md`: Clarified security note to include symlink path validation.
+
+4) Verification
+- `npm run typecheck`
+- `npm run test`
+
+5) Results
+- Typecheck passed.
+- Tests passed (70/70).
+- Run file API now rejects symlink escapes and ensures resolved files stay within the run folder.
+
+6) Questions / blockers
+- None
+
+Done: Implemented realpath-based run file validation, added symlink-escape test, and updated security notes. Remaining risks: Serving local files is still sensitive—keep the viewer bound to localhost when possible.

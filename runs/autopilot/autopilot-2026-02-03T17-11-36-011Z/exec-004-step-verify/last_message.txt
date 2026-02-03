@@ -1,0 +1,21 @@
+Using tester skill.
+
+1) Objective
+- Verify the MVP run viewer changes with `npm run typecheck` and `npm run test`.
+
+2) Verification plan
+- Run `npm run typecheck`.
+- Run `npm run test` because behavior changed.
+
+3) Commands run
+- `npm run typecheck`
+- `npm run test`
+
+4) Results
+- Pass: `npm run typecheck` completed with no errors.
+- Pass: `npm run test` completed with 67 tests passing.
+
+5) Gaps / next steps
+- None.
+
+Done: Typecheck and tests passed. Remaining risk: Viewer serves local files; keep server bound to localhost and treat as trusted-only.

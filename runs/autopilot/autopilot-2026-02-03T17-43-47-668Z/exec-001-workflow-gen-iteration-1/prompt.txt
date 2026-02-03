@@ -1,0 +1,17 @@
+use the workflow-generator skill.
+
+Task: Finalize the run viewer MVP created in examples/run-viewer.ts. Requirements: (1) Fix the remaining TOCTOU risk in handleRunFile by opening the validated file (fs.promises.open) and serving via createReadStream({ fd, autoClose:true }) so the served inode can’t be swapped after validation; reject non-regular files; keep the existing traversal + symlink escape protections. (2) Remove or strictly gate absolute path disclosure: do NOT send x-transcript-path header by default; transcript meta should not expose absolute paths unless an explicit flag is passed (e.g. --debug-paths). (3) Ensure 'Copy resume command' is shell-safe for arbitrary prompts (implement a minimal POSIX-safe single-quote escaping helper in the client JS). (4) Ensure Events tab does not degrade for large files: stream and append in chunks; keep max rendered lines and allow 'tail N' or incremental windowing; avoid O(n^2) concatenation. (5) Keep routes strict and error codes correct (404 for missing file, 400 for invalid path). (6) Update/extend tests in tests/runViewer.test.ts to cover TOCTOU guard behavior at least at the API contract level (symlink escape still blocked, missing file 404, transcript path header absent by default, meta path gated). (7) Update docs/run-data-ui.md accordingly. (8) No new runtime dependencies. (9) Run npm run typecheck and npm run test and report results.
+
+Output ONLY valid JSON for a workflow object with fields:
+- version (1)
+- id (string)
+- steps: array of { id, type:"agent.run", goal, dependsOn? }
+
+Rules:
+- Keep it small (<= 8 steps). Prefer parallel research → execute → verify → summarize.
+- Every step.goal MUST begin with: "use the <skill> skill."
+- Use only skills that exist in this workspace.
+- Use dependsOn to express data dependencies.
+- If iteration > 1, focus only on remaining work (do not repeat completed steps).
+
+Iteration: 1

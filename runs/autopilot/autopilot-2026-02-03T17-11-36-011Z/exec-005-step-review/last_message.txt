@@ -1,0 +1,19 @@
+1) Findings (ordered by severity)
+- `examples/run-viewer.ts:495-501` UI uses `innerHTML` with `runId` and timestamps from `manifest.json` — untrusted strings can inject HTML/JS into the local viewer, which can exfiltrate local data from the same origin — build DOM with `textContent` or run values through `escapeHtml` before interpolation.
+- `examples/run-viewer.ts:585-603` and `examples/run-viewer.ts:637-664` more `innerHTML` interpolation of `exec.label`, `threadId`, graph nodes/edges, and warnings — same XSS surface for any crafted labels or warnings — use DOM creation or escaping for each field.
+- `examples/run-viewer.ts:606-610` “Copy resume command” only escapes newlines and `"` — prompts containing backslashes, `$`, backticks, or `\` escapes can be interpreted by the shell, producing a different command or unintended expansions — either shell-escape fully, or wrap in single quotes with proper escaping of `'`, or provide a safe JSON `--prompt-file`/`@file` pattern if available.
+- `examples/run-viewer.ts:745-780` streaming events appends to `textContent` on every line — for large `events.jsonl` this can become O(n²) and freeze the UI, undermining “stream large files” — buffer chunks (array + `join` per chunk), or append to a `<pre>` via `appendChild(document.createTextNode(...))` to reduce reflow.
+
+2) Missing tests or verification gaps
+- No automated checks for API path traversal hardening (`/api/runs/:runId/file?path=…`) or transcript resolution/404 behavior.
+- No UI regression check for very large `events.jsonl` (performance/streaming).
+
+3) Questions / assumptions
+- None.
+
+4) Summary
+- Review focused on `examples/run-viewer.ts` and `docs/run-data-ui.md`; other modified files in `src/` and `tests/` were not reviewed.
+- Main risks: HTML injection via `innerHTML`, shell-unsafe resume command copy, and large-events performance.
+- Tests: I did not run them; relying on the provided outputs that `npm run typecheck` and `npm run test` passed.
+
+Done. Remaining risk: local-only server still executes unescaped HTML from manifests; tighten escaping before sharing viewers or binding to non-localhost.

@@ -1,0 +1,21 @@
+1) Objective
+- Ensure graph updates are persisted immediately after `recordInvokesEdges` / `recordCompletionToWorkflowEdge`, and before final manifest writes.
+
+2) Plan to execute
+- Update manifest sync timing in the autopilot runner.
+- Run `npm run typecheck`.
+
+3) Changes
+- `examples/codex-autopilot.ts`: call `writeManifest` after `recordCompletionToWorkflowEdge` and `recordInvokesEdges`, and use `writeManifest` for final completion/max-iterations writes to guarantee graph sync.
+
+4) Verification
+- `npm run typecheck`
+
+5) Results
+- Typecheck passed.
+- Graph updates now flush to `manifest.json` immediately after invoke/completion edge recording and before final manifest writes.
+
+6) Questions / blockers
+- None.
+
+Done. Remaining risks: transcript enrichment still best-effort; missing/invalid transcripts only produce warnings and omit spawn/interact edges.

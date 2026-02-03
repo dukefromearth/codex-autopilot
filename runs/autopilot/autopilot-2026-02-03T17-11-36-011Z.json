@@ -1,0 +1,245 @@
+{
+  "task": "Implement an MVP run viewer UI for autopilot captures. Requirements: (1) Add a zero-deps viewer: a tiny Node HTTP server in examples/run-viewer.ts that serves a static HTML UI (no build step) and JSON APIs. (2) The UI information architecture must be: Run list (left) -> Exec list (middle) -> main panel with tabs: Overview, Graph, Output, Prompt, Events, Stderr, Transcript (Supplemental). (3) APIs (read-only, stream large files): GET /api/runs (scan runs/autopilot/*/manifest.json), GET /api/runs/:runId/manifest, GET /api/runs/:runId/file?path=<manifest-relative> (must validate path stays within the run folder), optional GET /api/transcript/:threadId (best-effort resolve ~/.codex/sessions/**/rollout-*-<threadId>.jsonl and stream it; if missing, return 404 with friendly message). Add a --codex-home flag to override default ~/.codex for transcripts. (4) In the UI, add 'Copy resume command' and 'Copy open transcript path' buttons where applicable. Resume command format: codex exec resume <threadId> \"<prompt>\". (5) Events tab: render events.jsonl incrementally (not loading entire file), with filter by event.type and text search. (6) Graph tab: render manifest.graph (nodes/edges) in a simple but clear way (table view is acceptable; optional SVG). Clicking a node jumps to the related exec and tab. (7) Update docs/run-data-ui.md with viewer usage: how to run it, what it reads, what is canonical vs supplemental, and security notes about serving local files. (8) No new runtime deps, minimal changes, do not change public APIs. (9) Run npm run typecheck and report results in final summary. If you touch tests or behavior, run npm run test.",
+  "model": "gpt-5.2-codex",
+  "effort": "high",
+  "unsafe": false,
+  "search": false,
+  "iterations": [
+    {
+      "index": 1,
+      "workflow": {
+        "version": 1,
+        "id": "mvp-run-viewer-ui",
+        "steps": [
+          {
+            "id": "discover",
+            "type": "agent.run",
+            "goal": "use the researcher skill. Scan the repo to understand run data layout, existing examples/docs, and identify files/paths to touch for the run viewer UI requirements."
+          },
+          {
+            "id": "implement",
+            "type": "agent.run",
+            "goal": "use the task-executor skill. Implement the MVP run viewer UI and server in examples/run-viewer.ts, update docs/run-data-ui.md, add flags/APIs, and ensure requirements are met without new deps or public API changes.",
+            "dependsOn": [
+              "discover"
+            ]
+          },
+          {
+            "id": "verify",
+            "type": "agent.run",
+            "goal": "use the tester skill. Run npm run typecheck and npm run test if behavior or tests changed; capture and report results.",
+            "dependsOn": [
+              "implement"
+            ]
+          },
+          {
+            "id": "review",
+            "type": "agent.run",
+            "goal": "use the reviewer skill. Review changes for regressions, risks, missing tests/docs, and provide a concise final summary referencing modified files.",
+            "dependsOn": [
+              "verify"
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "stepId": "discover",
+          "status": "succeeded",
+          "execId": "exec-002",
+          "threadId": "019c247d-32d8-7f10-816d-ffc9f2e171b6",
+          "outputText": "1) Research question  \n- Scan the repo to understand run data layout, existing examples/docs, and identify files/paths to touch for the run viewer UI requirements.\n\n2) Sources consulted  \n- `docs/run-data-ui.md`  \n- `examples/codex-autopilot.ts`  \n- `runs/autopilot/` (sample run folders)\n\n3) Findings  \n- The canonical description of autopilot run capture layout and manifest schema is documented in `docs/run-data-ui.md`, including the `runs/autopilot/<runId>/manifest.json` index and per-exec artifacts (`events.jsonl`, `stderr.txt`, `last_message.txt`, `prompt.txt`, `argv.json`, optional `schema.json`). `manifest.graph` includes nodes/edges/warnings for a lightweight provenance graph. citedocs/run-data-ui.md  \n- The autopilot runner in `examples/codex-autopilot.ts` defines the `RunManifest` and `GraphNode/GraphEdge` shapes and writes `manifest.json` into `runs/autopilot/<runId>/`, with `execs[].artifacts.*` being relative paths to the run folder. It also captures `events.jsonl` as raw stdout JSONL and `stderr.txt`, and it best-effort scans `~/.codex/sessions/**/rollout-*-<threadId>.jsonl` to enrich `manifest.graph`, recording warnings if transcripts are missing. citeexamples/codex-autopilot.ts  \n- The repo contains real captured runs under `runs/autopilot/` with the expected folder structure (run directory containing `manifest.json` and `exec-*` folders). This confirms the on-disk layout the viewer will read. citeruns/autopilot  \n\n4) Implications for the task  \n- The run viewer should treat `runs/autopilot/*/manifest.json` as the entry point for listing runs and navigation; artifact paths should always be resolved relative to the run folder as documented.  \n- The optional transcript lookup API can mirror the autopilot logic that scans `~/.codex/sessions/**/rollout-*-<threadId>.jsonl` and selects the newest match; this behavior is already established in `examples/codex-autopilot.ts`.  \n- UI tab content should be derived from manifest fields: `execs[].artifacts` for output/prompt/stderr/events; `graph` for the Graph tab.\n\n5) Open questions  \n- None.\n\n6) Assumptions  \n- None.",
+          "usage": {
+            "input_tokens": 302720,
+            "cached_input_tokens": 275712,
+            "output_tokens": 1409
+          }
+        },
+        {
+          "stepId": "implement",
+          "status": "succeeded",
+          "execId": "exec-003",
+          "threadId": "019c247d-f512-7dd1-b2ba-dbd6103e3543",
+          "outputText": "1) Objective\n- Implement a zero-deps autopilot run viewer UI + server with required APIs, update docs, and verify with typecheck/tests.\n\n2) Plan to execute\n- Inspect repo conventions and existing manifest schema.\n- Add `examples/run-viewer.ts` with HTTP server + static UI + APIs.\n- Update `docs/run-data-ui.md` with viewer usage and security notes.\n- Run `npm run typecheck` and `npm run test`.\n\n3) Changes\n- `examples/run-viewer.ts` added zero-deps HTTP server, UI, and APIs for runs, manifest, file streaming, and transcript lookup.\n- `docs/run-data-ui.md` documented viewer usage, data sources, and security cautions.\n\n4) Verification\n- `npm run typecheck`\n- `npm run test`\n\n5) Results\n- Server/UI, APIs, and docs implemented as specified; no new deps and no public API changes.\n- Done: MVP run viewer and docs updates complete; typecheck/test pass.\n- Remaining risks: Viewer serves local files; keep bound to localhost for safety.\n\n6) Questions / blockers\n- None",
+          "usage": {
+            "input_tokens": 555707,
+            "cached_input_tokens": 486272,
+            "output_tokens": 15978
+          }
+        },
+        {
+          "stepId": "verify",
+          "status": "succeeded",
+          "execId": "exec-004",
+          "threadId": "019c2482-6e7d-7c01-8115-43b5763ff0c4",
+          "outputText": "Using tester skill.\n\n1) Objective\n- Verify the MVP run viewer changes with `npm run typecheck` and `npm run test`.\n\n2) Verification plan\n- Run `npm run typecheck`.\n- Run `npm run test` because behavior changed.\n\n3) Commands run\n- `npm run typecheck`\n- `npm run test`\n\n4) Results\n- Pass: `npm run typecheck` completed with no errors.\n- Pass: `npm run test` completed with 67 tests passing.\n\n5) Gaps / next steps\n- None.\n\nDone: Typecheck and tests passed. Remaining risk: Viewer serves local files; keep server bound to localhost and treat as trusted-only.",
+          "usage": {
+            "input_tokens": 59727,
+            "cached_input_tokens": 50944,
+            "output_tokens": 488
+          }
+        },
+        {
+          "stepId": "review",
+          "status": "succeeded",
+          "execId": "exec-005",
+          "threadId": "019c2482-b598-7432-bae0-9e14f474c06f",
+          "outputText": "1) Findings (ordered by severity)\n- `examples/run-viewer.ts:495-501` UI uses `innerHTML` with `runId` and timestamps from `manifest.json` — untrusted strings can inject HTML/JS into the local viewer, which can exfiltrate local data from the same origin — build DOM with `textContent` or run values through `escapeHtml` before interpolation.\n- `examples/run-viewer.ts:585-603` and `examples/run-viewer.ts:637-664` more `innerHTML` interpolation of `exec.label`, `threadId`, graph nodes/edges, and warnings — same XSS surface for any crafted labels or warnings — use DOM creation or escaping for each field.\n- `examples/run-viewer.ts:606-610` “Copy resume command” only escapes newlines and `\"` — prompts containing backslashes, `$`, backticks, or `\\` escapes can be interpreted by the shell, producing a different command or unintended expansions — either shell-escape fully, or wrap in single quotes with proper escaping of `'`, or provide a safe JSON `--prompt-file`/`@file` pattern if available.\n- `examples/run-viewer.ts:745-780` streaming events appends to `textContent` on every line — for large `events.jsonl` this can become O(n²) and freeze the UI, undermining “stream large files” — buffer chunks (array + `join` per chunk), or append to a `<pre>` via `appendChild(document.createTextNode(...))` to reduce reflow.\n\n2) Missing tests or verification gaps\n- No automated checks for API path traversal hardening (`/api/runs/:runId/file?path=…`) or transcript resolution/404 behavior.\n- No UI regression check for very large `events.jsonl` (performance/streaming).\n\n3) Questions / assumptions\n- None.\n\n4) Summary\n- Review focused on `examples/run-viewer.ts` and `docs/run-data-ui.md`; other modified files in `src/` and `tests/` were not reviewed.\n- Main risks: HTML injection via `innerHTML`, shell-unsafe resume command copy, and large-events performance.\n- Tests: I did not run them; relying on the provided outputs that `npm run typecheck` and `npm run test` passed.\n\nDone. Remaining risk: local-only server still executes unescaped HTML from manifests; tighten escaping before sharing viewers or binding to non-localhost.",
+          "usage": {
+            "input_tokens": 260021,
+            "cached_input_tokens": 223744,
+            "output_tokens": 3558
+          }
+        }
+      ],
+      "completion": {
+        "done": false,
+        "reason": "Review found correctness/security gaps in `examples/run-viewer.ts`: multiple `innerHTML` interpolations of manifest data (runs/execs/overview/graph/warnings) enable XSS in the local viewer; the “Copy resume command” string is not shell-safe for prompts containing backticks, `$`, backslashes, or quotes; events streaming appends to `textContent` per line causing O(n²) growth for large `events.jsonl`; and `runId` is not validated against path traversal (e.g., `..` can escape `runs/autopilot`). These should be fixed before marking the MVP done."
+      }
+    },
+    {
+      "index": 2,
+      "workflow": {
+        "version": 1,
+        "id": "mvp-run-viewer-ui-iteration-2",
+        "steps": [
+          {
+            "id": "implement",
+            "type": "agent.run",
+            "goal": "use the task-executor skill. Fix remaining gaps in examples/run-viewer.ts: eliminate XSS from manifest-derived UI, make resume command shell-safe, fix events streaming performance, and validate runId against traversal; update docs/run-data-ui.md if behavior/security notes need adjustments."
+          },
+          {
+            "id": "verify",
+            "type": "agent.run",
+            "goal": "use the tester skill. Run npm run typecheck, and run npm run test if behavior changed; report results.",
+            "dependsOn": [
+              "implement"
+            ]
+          },
+          {
+            "id": "review",
+            "type": "agent.run",
+            "goal": "use the reviewer skill. Re-review the run viewer changes for correctness, security, regressions, and missing tests.",
+            "dependsOn": [
+              "verify"
+            ]
+          }
+        ]
+      },
+      "steps": [
+        {
+          "stepId": "implement",
+          "status": "succeeded",
+          "execId": "exec-008",
+          "threadId": "019c2486-2a64-7b90-993b-d50ff0d72414",
+          "outputText": "1) Objective\n- Fix security and performance gaps in `examples/run-viewer.ts`, validate runId traversal, and update `docs/run-data-ui.md` accordingly, with required checks run.\n\n2) Plan to execute\n- Inspect `examples/run-viewer.ts` and `docs/run-data-ui.md`.\n- Harden UI rendering against XSS and fix resume command escaping.\n- Improve events streaming performance and validate runId.\n- Update docs for security behavior.\n- Run `npm run typecheck` and `npm run test`.\n\n3) Changes\n- `examples/run-viewer.ts`: render manifest-derived UI via DOM text nodes (no `innerHTML` for untrusted data), shell-escape resume prompt safely for double-quoted POSIX strings, batch event streaming output to avoid quadratic DOM updates, and validate `runId` before filesystem access.\n- `docs/run-data-ui.md`: document viewer security behavior and resume command quoting expectations.\n\n4) Verification\n- `npm run typecheck`\n- `npm run test`\n\n5) Results\n- XSS exposure removed for manifest-derived UI content, resume command is shell-safe for double-quoted POSIX usage, events streaming is incremental without O(n^2) DOM writes, and runId traversal is blocked.\n- Typecheck and tests passed.\n\n6) Questions / blockers\n- None\n\nDone: Secured viewer UI rendering and file access, improved events streaming performance, and updated docs.  \nRisks: Transcript lookup still relies on best-effort filesystem discovery; unusual shell environments may still require manual review before running copied resume commands.",
+          "usage": {
+            "input_tokens": 449265,
+            "cached_input_tokens": 386048,
+            "output_tokens": 9615
+          }
+        },
+        {
+          "stepId": "verify",
+          "status": "succeeded",
+          "execId": "exec-009",
+          "threadId": "019c2489-28c8-7e03-acee-b969bf9a7969",
+          "outputText": "1) Objective\n- Run required verification for the MVP run viewer UI changes (typecheck and tests).\n\n2) Verification plan\n- Run `npm run typecheck`.\n- Run `npm run test` because behavior changed.\n\n3) Commands run\n- `npm run typecheck`\n- `npm run test`\n\n4) Results\n- Pass. Typecheck succeeded.\n- Pass. Tests succeeded (67/67).\n\n5) Gaps / next steps\n- None.\n\nDone: Typecheck and test suite passed; no remaining risks from verification.",
+          "usage": {
+            "input_tokens": 60022,
+            "cached_input_tokens": 53888,
+            "output_tokens": 414
+          }
+        },
+        {
+          "stepId": "review",
+          "status": "succeeded",
+          "execId": "exec-010",
+          "threadId": "019c2489-7469-7cd2-b3f6-676393211ad6",
+          "outputText": "Using `reviewer` skill for run viewer scope.\n\n1) Findings (ordered by severity)  \n- `examples/run-viewer.ts:774-818` Event stream reload starts a new fetch without cancelling the prior `ReadableStream` — multiple reloads can interleave output or append duplicates, confusing filters — add an `AbortController` per stream and cancel the previous read before starting a new one.  \n- `examples/run-viewer.ts:90-170` `/api/runs/:runId/manifest` and `/file` parse `runId` via `pathname.split(\"/\")[3]` while only checking `startsWith`/`endsWith` — paths like `/api/runs/foo/bar/manifest` silently resolve to `foo`, which is surprising and could mask incorrect routing — validate the path shape with an exact regex or reject extra segments.  \n\n2) Missing tests or verification gaps  \n- No tests for `/api/runs/:runId/file` path traversal rejection.  \n- No tests for transcript lookup behavior (`--codex-home` override, missing transcript 404).  \n- No tests for event streaming/filtering (especially reload/abort semantics).\n\n3) Questions / assumptions  \n- None.\n\n4) Summary  \n- Core functionality looks correct and reasonably safe; no major security regressions found.  \n- Main correctness risk is event stream reload interleaving without cancellation.  \n- Recommend adding minimal API-level tests for traversal and transcript lookup.",
+          "usage": {
+            "input_tokens": 223821,
+            "cached_input_tokens": 201984,
+            "output_tokens": 2056
+          }
+        }
+      ],
+      "completion": {
+        "done": false,
+        "reason": "Using reviewer skill.\n\n1) Findings (ordered by severity)\n- examples/run-viewer.ts:774-808 Event stream reload does not cancel the prior fetch/read; repeated reloads can interleave output or apply stale filters — add an AbortController per stream, cancel previous reader, and ignore aborted streams.\n- examples/run-viewer.ts:134-181 Route parsing uses startsWith/endsWith plus split, which accepts extra path segments (e.g., /api/runs/foo/bar/manifest) and silently resolves to foo — enforce exact path shapes with regex or segment validation for /api/runs/:runId/manifest, /api/runs/:runId/file, and /api/transcript/:threadId.\n- examples/run-viewer.ts:1008-1014 Missing file reads can return 200 with empty body because headers are sent before stream errors — stat/open first or handle the error before sending headers so missing files return 404.\n\n2) Missing tests or verification gaps\n- No tests for /api/runs/:runId/file traversal rejection and missing-file 404 behavior.\n- No tests for transcript lookup behavior, including --codex-home override and 404 message.\n- No tests for events reload abort behavior.\n\n3) Questions / assumptions\n- None\n\n4) Summary\n- Core UI meets requirements, but a few API/UX correctness gaps remain.\n- Recommend addressing abort handling, strict routing, and file-not-found semantics before calling done."
+      }
+    },
+    {
+      "index": 3,
+      "workflow": {
+        "version": 1,
+        "id": "mvp-run-viewer-ui-iteration-3",
+        "steps": [
+          {
+            "id": "implement",
+            "type": "agent.run",
+            "goal": "use the task-executor skill. Fix remaining reviewer findings: add AbortController-based event stream cancellation to prevent interleaving/stale filters, enforce strict route parsing for /api/runs/:runId/manifest, /api/runs/:runId/file, /api/transcript/:threadId, and ensure missing files return 404 before headers are sent; add minimal tests for traversal rejection, transcript lookup (including --codex-home), and event reload abort behavior."
+          },
+          {
+            "id": "verify",
+            "type": "agent.run",
+            "dependsOn": [
+              "implement"
+            ],
+            "goal": "use the tester skill. Run npm run typecheck and npm run test; report results and any failures or gaps."
+          },
+          {
+            "id": "review",
+            "type": "agent.run",
+            "dependsOn": [
+              "verify"
+            ],
+            "goal": "use the reviewer skill. Review the changes for regressions, API/UX correctness, and missing tests; prioritize any remaining risks with file references."
+          }
+        ]
+      },
+      "steps": [
+        {
+          "stepId": "implement",
+          "status": "succeeded",
+          "execId": "exec-013",
+          "threadId": "019c248c-f443-7da3-aa4b-c62183c79b9e",
+          "outputText": "1) Objective\n- Fix reviewer findings for the run viewer by adding abortable event streaming, strict route parsing, early 404s for missing files, and add minimal tests (plus docs update).\n\n2) Plan to execute\n- Tighten route parsing and file/transcript handling in `examples/run-viewer.ts`.\n- Add abortable event stream logic in the UI script.\n- Add minimal tests for traversal, transcript lookup with `--codex-home`, and abort logic.\n- Update docs and run required checks.\n\n3) Changes\n- `examples/run-viewer.ts`: strict route parsing, early `stat` checks for 404s, abortable event streaming in UI, exported helpers, and main-module guard.\n- `tests/runViewer.test.ts`: new tests for traversal rejection, transcript lookup with codex home, and event reload abort presence.\n- `docs/run-data-ui.md`: documented viewer API surface.\n\n4) Verification\n- `npm run typecheck`\n- `npm run test`\n\n5) Results\n- Typecheck and tests pass.\n- Viewer now aborts stale event streams, routes are strictly parsed, and missing files return 404 before streaming.\n- Tests cover traversal rejection, codex-home transcript lookup, and event abort logic (string-based check).\n\n6) Questions / blockers\n- None.\n\nDone. Summary: Added strict routing + early 404s, AbortController-driven event reload cancellation, new tests, and updated run viewer docs. Remaining risk: the event reload abort test asserts HTML content (not runtime behavior), so it won’t catch future DOM wiring regressions.",
+          "usage": {
+            "input_tokens": 785632,
+            "cached_input_tokens": 715904,
+            "output_tokens": 14569
+          }
+        },
+        {
+          "stepId": "verify",
+          "status": "succeeded",
+          "execId": "exec-014",
+          "threadId": "019c2491-2c2e-74d0-ba5b-9da7e7a3c117",
+          "outputText": "1) Objective\n- Run `npm run typecheck` and `npm run test`, then report results and any failures or gaps.\n\n2) Verification plan\n- Run `npm run typecheck`\n- Run `npm run test`\n\n3) Commands run\n- `npm run typecheck`\n- `npm run test`\n\n4) Results\n- `npm run typecheck` passed.\n- `npm run test` passed (70 tests, 0 failures).\n\n5) Gaps / next steps\n- None.\n\nDone. Remaining risk: none.",
+          "usage": {
+            "input_tokens": 60018,
+            "cached_input_tokens": 50944,
+            "output_tokens": 319
+          }
+        },
+        {
+          "stepId": "review",
+          "status": "succeeded",
+          "execId": "exec-015",
+          "threadId": "019c2491-71a2-7890-b92c-c6f4ea295a39",
+          "outputText": "1) Findings (ordered by severity)\n- `examples/run-viewer.ts:1016-1045` Path traversal check uses `path.resolve` + prefix match but does not guard against symlink escapes inside the run directory — a crafted artifact path or symlink in `runs/autopilot/<runId>` can expose files outside the run folder if the server is reachable. Suggested fix: resolve both the run directory and target with `fs.realpath` (or reject symlinks via `lstat`) and ensure the target realpath is within the run dir realpath before streaming.\n\n2) Missing tests or verification gaps\n- No tests for `/api/runs` listing (ordering, empty dir) or `/api/runs/:runId/manifest` success path.\n- No tests for the resume command formatting (escaping) or transcript 404 “friendly message” body.\n\n3) Questions / assumptions\n- None.\n\n4) Summary\n- Main risk is symlink-based path escape in the run file streaming endpoint.\n- Otherwise the MVP viewer and API surface look consistent with the stated requirements.\n- Tests reported by the user were not re-run by me; I’m relying on the provided output.\n\nDone. Remaining risks: symlink escape in `GET /api/runs/:runId/file` until mitigated.",
+          "usage": {
+            "input_tokens": 666578,
+            "cached_input_tokens": 624640,
+            "output_tokens": 7337
+          }
+        }
+      ],
+      "completion": {
+        "done": false,
+        "reason": "The run file API still allows symlink escapes: `handleRunFile` only checks `path.resolve` prefix, so a symlink inside a run directory can point outside and bypass the intended constraint. This violates the requirement to ensure the requested path stays within the run folder and is a security risk if the server is reachable."
+      }
+    }
+  ]
+}

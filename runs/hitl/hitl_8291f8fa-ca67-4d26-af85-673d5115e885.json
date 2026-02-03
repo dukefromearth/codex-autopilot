@@ -1,0 +1,86 @@
+{
+  "id": "hitl_8291f8fa-ca67-4d26-af85-673d5115e885",
+  "createdAt": "2026-02-02T20:07:12.562Z",
+  "updatedAt": "2026-02-02T20:07:12.562Z",
+  "goal": "Investigate how HITL works, how the CLI works, then update the CLI to make it easier to resume human in the loop. This should be a UX update",
+  "parentRunId": "ceb4bae1-b373-4cb1-a2fa-912cceba5987",
+  "gate": {
+    "required": true,
+    "assignee": "human",
+    "questions": [
+      "Should resuming HITL be supported in `src/cli.ts` (non-interactive flags/subcommand), or only improved within `src/cli/live.ts` (interactive)?",
+      "If adding a non-interactive resume path, do you prefer a `resume` subcommand (`npm run dev -- resume <id> ...`) or flags (`--resume-checkpoint <id> --answer ...`) to avoid breaking the existing `--workflow` surface?",
+      "When paused, should the CLI print the full checkpoint file path (`./runs/hitl/<id>.json`) and echo the exact `Question` keys to use for `Question=Answer` pairs (copy-paste safe)?",
+      "Do you want answer keys to support stable aliases (e.g., `q1=...`) in addition to matching full question text, to reduce brittleness?"
+    ],
+    "rationale": "These decisions determine the CLI surface area, compatibility expectations, and the safest answer-input format to implement (and test) without changing workflow semantics.",
+    "sources": [
+      "src/cli.ts",
+      "src/cli/live.ts",
+      "src/runtime/workflow/multiAgent.ts",
+      "src/runtime/workflow/hitl.ts",
+      "docs/runtime.md",
+      "README.md"
+    ]
+  },
+  "tasks": [
+    {
+      "goal": "Fix the live CLI pause/resume UX first: print copy-pasteable guidance on pause (checkpoint path + rendered questions) and replace space-splitting `Question=Answer` parsing with a robust input format (e.g., `--answers @file.json`, interactive prompts, or numbered questions).",
+      "expectedFiles": [
+        "src/cli/live.ts",
+        "docs/runtime.md",
+        "tests/cli-hitl-resume.test.ts"
+      ],
+      "priority": "critical",
+      "rationale": "This addresses the immediate high-severity issue: users can’t reliably resume when questions contain spaces, and the CLI doesn’t show what to answer. It’s the biggest UX win with minimal runtime changes.",
+      "sources": [
+        "src/cli/live.ts",
+        "src/runtime/workflow/multiAgent.ts",
+        "src/runtime/workflow/hitl.ts",
+        "src/runtime/context/timeline.ts"
+      ]
+    },
+    {
+      "goal": "Decide and implement a non-interactive resume path in the standard CLI (subcommand or flags) that can resume from a checkpoint without keeping a live session.",
+      "expectedFiles": [
+        "src/cli.ts",
+        "docs/developer-workflow-dx.md",
+        "tests/cli-hitl-resume.test.ts"
+      ],
+      "priority": "high",
+      "rationale": "Operationally, HITL checkpoints often outlive a terminal session; the standard CLI currently provides no way to resume, despite checkpoints being persisted by default.",
+      "sources": [
+        "src/cli.ts",
+        "src/runtime/workflow/multiAgent.ts",
+        "src/runtime/workflow/hitl.ts"
+      ]
+    },
+    {
+      "goal": "Document the HITL lifecycle clearly: checkpoint file location/format, resume semantics, `workflow.paused` event payload, and recommended resume workflows (interactive + non-interactive).",
+      "expectedFiles": [
+        "docs/runtime.md",
+        "docs/developer-workflow-dx.md",
+        "README.md",
+        "tickets/todo/cli-hitl-resume-ux.md"
+      ],
+      "priority": "high",
+      "rationale": "Current behavior is discoverable only via code and scattered docs; documenting it reduces user confusion and sets expectations for the improved UX.",
+      "sources": [
+        "docs/runtime.md",
+        "docs/architecture.md",
+        "README.md",
+        "src/runtime/workflow/hitl.ts",
+        "src/cli/live.ts"
+      ]
+    }
+  ],
+  "answers": {
+    "Should resuming HITL be supported in `src/cli.ts` (non-interactive flags/subcommand), or only improved within `src/cli/live.ts` (interactive)?": "Support both: improve `src/cli/live.ts` UX and add a non-interactive resume path in `src/cli.ts`.",
+    "If adding a non-interactive resume path, do you prefer a `resume` subcommand (`npm run dev -- resume <id> ...`) or flags (`--resume-checkpoint <id> --answer ...`) to avoid breaking the existing `--workflow` surface?": "Prefer a `resume` subcommand (e.g. `npm run dev -- resume <checkpointId>`).",
+    "When paused, should the CLI print the full checkpoint file path (`./runs/hitl/<id>.json`) and echo the exact `Question` keys to use for `Question=Answer` pairs (copy-paste safe)?": "Yes—print the full checkpoint path and copy-paste-safe question keys.",
+    "Do you want answer keys to support stable aliases (e.g., `q1=...`) in addition to matching full question text, to reduce brittleness?": "Yes—support stable aliases like `q1`, `q2`, etc."
+  },
+  "metadata": {
+    "synthesisMode": "llm"
+  }
+}

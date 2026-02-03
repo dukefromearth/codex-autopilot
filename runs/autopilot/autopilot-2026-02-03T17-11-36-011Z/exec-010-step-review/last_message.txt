@@ -1,0 +1,18 @@
+Using `reviewer` skill for run viewer scope.
+
+1) Findings (ordered by severity)  
+- `examples/run-viewer.ts:774-818` Event stream reload starts a new fetch without cancelling the prior `ReadableStream` — multiple reloads can interleave output or append duplicates, confusing filters — add an `AbortController` per stream and cancel the previous read before starting a new one.  
+- `examples/run-viewer.ts:90-170` `/api/runs/:runId/manifest` and `/file` parse `runId` via `pathname.split("/")[3]` while only checking `startsWith`/`endsWith` — paths like `/api/runs/foo/bar/manifest` silently resolve to `foo`, which is surprising and could mask incorrect routing — validate the path shape with an exact regex or reject extra segments.  
+
+2) Missing tests or verification gaps  
+- No tests for `/api/runs/:runId/file` path traversal rejection.  
+- No tests for transcript lookup behavior (`--codex-home` override, missing transcript 404).  
+- No tests for event streaming/filtering (especially reload/abort semantics).
+
+3) Questions / assumptions  
+- None.
+
+4) Summary  
+- Core functionality looks correct and reasonably safe; no major security regressions found.  
+- Main correctness risk is event stream reload interleaving without cancellation.  
+- Recommend adding minimal API-level tests for traversal and transcript lookup.

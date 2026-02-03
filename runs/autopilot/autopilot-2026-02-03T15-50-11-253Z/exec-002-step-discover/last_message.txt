@@ -1,0 +1,31 @@
+1) Research question
+- Inspect repo context for autopilot capture, manifest structure, and run-data docs to identify where to add provenance graph fields and transcript parsing hooks.
+
+2) Sources consulted
+- `examples/codex-autopilot.ts`
+- `docs/run-data-ui.md`
+- `runs/autopilot/autopilot-2026-02-03T03-36-23-338Z.json`
+
+3) Findings
+- Autopilot capture is implemented in `examples/codex-autopilot.ts`, with `codexExec` spawning `codex exec --json` and writing per-exec artifacts (`events.jsonl`, `stderr.txt`, `last_message.txt`) plus a run-level `manifest.json`; `RunManifest` and `ExecManifestEntry` types are defined in this file. (`examples/codex-autopilot.ts`)
+- `codexExec` builds the CLI argv array in-place and writes artifacts under `runs/autopilot/<runId>/exec-.../`; this is the natural hook to add `prompt.txt` and `argv.json` per exec folder and to include a stable `execId` in the manifest entry. (`examples/codex-autopilot.ts`)
+- `RunManifest` currently contains `runId`, timestamps, cwd/options, and `execs[]` entries with label/threadId/status/exitCode/artifacts; there is no graph section yet. Adding a top-level `graph` (nodes + edges + warnings) belongs on this type and on `runManifest` initialization. (`examples/codex-autopilot.ts`)
+- Workflow dependency info is accessible during `executeWorkflow` via `workflow.steps[].dependsOn`, and step execution labels are `step:<id>`; this is the place to derive `dependsOn` edges between step exec nodes once they have stable execIds. (`examples/codex-autopilot.ts`)
+- The workflow-level invocations are labeled `workflow-gen:iteration-<n>` and `completion-check:iteration-<n>` in `generateWorkflow`/`checkCompletion`, so “invokes” edges (workflow-gen → step execs → completion-check → next workflow-gen) can be recorded by connecting these exec labels/ids once manifest entries exist. (`examples/codex-autopilot.ts`)
+- The run-data UI doc already describes the autopilot manifest and per-exec artifacts and explicitly mentions persisted transcripts under `~/.codex/sessions/**/rollout-…-<thread_id>.jsonl`; this is where to document new provenance graph fields and transcript-derived edges (spawn/interact) and warnings if transcript lookup fails. (`docs/run-data-ui.md`)
+- There is no existing transcript parsing logic in the repo; any hook for parsing `~/.codex/sessions/**/rollout-*-<threadId>.jsonl` would be new and should live near `codexExec` (per-exec), or as a post-processing step after exec completion to enrich the manifest graph. (`examples/codex-autopilot.ts`, `docs/run-data-ui.md`)
+- The sample run log in `runs/autopilot/autopilot-2026-02-03T03-36-23-338Z.json` confirms the current capture contract and prior changes were limited to `examples/codex-autopilot.ts` + `docs/run-data-ui.md`, reinforcing those as the primary touch points. (`runs/autopilot/autopilot-2026-02-03T03-36-23-338Z.json`)
+
+4) Implications for the task
+- Add provenance fields by extending `RunManifest` in `examples/codex-autopilot.ts` with a `graph` section (nodes/edges/warnings) and `execId` on each `ExecManifestEntry`.
+- Add `prompt.txt` + `argv.json` in `codexExec`, alongside the current per-exec artifact writes, since it already has the prompt string and argv array.
+- Derive `dependsOn` edges in `executeWorkflow` where step dependencies are computed and results are available.
+- Record `invokes` edges by linking the execs created in `generateWorkflow`, `executeWorkflow`, and `checkCompletion`.
+- Transcript parsing hooks should be placed after each exec completes (in `codexExec`) or as a manifest-enrichment pass once threadId is known; ensure docs cover fallback behavior and warnings when transcripts are missing.
+
+5) Open questions
+- Where should graph warnings live: in `manifest.json` top-level (suggested) or per-exec? (No existing warning field.)
+- Do you want `execId` to be the folder name, a UUID, or both (folder name as stable ID)?
+
+6) Assumptions
+- The provenance graph is scoped to `runs/autopilot/<runId>/manifest.json` and not the legacy `runs/autopilot/<runId>.json` runState.

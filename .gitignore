@@ -3,8 +3,6 @@ __pycache__/
 *.pyc
 .env
 .env.*
-.runs/
-runs/
 .cache/
 .DS_Store
 .pytest_cache/
@@ -19,7 +17,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-.codex/
 
 # Repo graph artifacts
 repo_graph*.json

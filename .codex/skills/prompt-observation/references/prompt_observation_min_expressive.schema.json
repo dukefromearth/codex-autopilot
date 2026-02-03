@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/prompt_behavior_record_v1.schema.json",
+  "title": "PromptBehaviorRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "sessionId",
+    "createdAtUtc",
+    "prompt",
+    "run",
+    "observations"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Schema version integer. Illustrative (non-exhaustive) example: 1. Do not treat the example as a constant."
+    },
+    "sessionId": {
+      "type": "string",
+      "minLength": 8,
+      "description": "Session identifier (often from session_meta.payload.id). Illustrative examples (non-exhaustive): '<session-id>', '<uuid>'. Do not copy literally."
+    },
+    "createdAtUtc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Record authored timestamp in UTC (ISO-8601). Illustrative examples: '<ISO-8601-UTC>', 'YYYY-MM-DDThh:mm:ssZ'."
+    },
+    "prompt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["promptText"],
+      "properties": {
+        "promptId": {
+          "type": "string",
+          "description": "Optional stable prompt ID (human-assigned or hash-derived). Illustrative examples: '<hash>', '<prompt-id>'."
+        },
+        "promptText": {
+          "type": "string",
+          "description": "Full prompt text exactly as used."
+        },
+        "promptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Optional sha256 hex digest of promptText. Illustrative example: '<64-hex-chars>'."
+        },
+        "language": {
+          "type": "string",
+          "default": "en",
+          "description": "Optional BCP-47 tag. Illustrative examples: 'en', 'en-US', '<bcp47-tag>'."
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runId", "startedAtUtc"],
+      "properties": {
+        "runId": {
+          "type": "string",
+          "description": "Run identifier. Illustrative examples: '<run-id>', '<timestamp-based-id>'."
+        },
+        "startedAtUtc": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Run start time UTC (ISO-8601)."
+        },
+        "finishedAtUtc": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Optional run end time UTC (ISO-8601)."
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "model": { "type": "string" },
+            "reasoningEffort": { "type": "string" },
+            "concurrency": { "type": "integer", "minimum": 1 },
+            "unsafeMode": { "type": "boolean" },
+            "webSearchEnabled": { "type": "boolean" }
+          },
+          "description": "Optional run configuration."
+        },
+        "artifactRoots": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Optional list of artifact root paths/URIs. Illustrative examples: '<path-or-uri>', '<another-path-or-uri>'."
+        }
+      }
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Behavioral observations captured in a fixed three-part pattern with examples.",
+      "items": { "$ref": "#/$defs/behaviorObservation" }
+    },
+    "agreementStatus": {
+      "type": "array",
+      "description": "Optional stance toward external claims (agree/disagree/unknown).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["claimId", "stance"],
+        "properties": {
+          "claimId": { "type": "string" },
+          "stance": { "type": "string", "enum": ["agree", "disagree", "unknown"] },
+          "notes": { "type": "string" },
+          "references": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Optional evidence pointers as strings. Use placeholders; do not treat any one format as canonical."
+          }
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Optional freeform tags for retrieval."
+    }
+  },
+  "$defs": {
+    "behaviorObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observationId",
+        "categories",
+        "whenIObserved",
+        "iNoticed",
+        "thisLeadsMeToBelieve",
+        "forExamples"
+      ],
+      "properties": {
+        "observationId": {
+          "type": "string",
+          "description": "Unique within this record."
+        },
+        "categories": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Open set of category tags. Illustrative examples (non-exhaustive): 'prompt_structure', 'constraint_effect', '<custom-tag>'."
+        },
+        "whenIObserved": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Triggering condition, written in the form 'When I observed ...'. Guidance: describe a prompt feature or runtime condition, not an outcome claim. Illustrative (non-exhaustive) example: 'When I observed a prompt written as numbered requirements, ...' (any valid condition is acceptable)."
+        },
+        "iNoticed": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Observed behavior/outcome, written in the form 'I noticed ...'. Guidance: stick to observable outputs (logs, artifacts, iterations) rather than interpretations. Illustrative (non-exhaustive) example: 'I noticed the system treated it like acceptance criteria rather than a vague goal, ...' (any observable outcome is acceptable)."
+        },
+        "thisLeadsMeToBelieve": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Inferred mechanism, written in the form 'This leads me to believe ...'. Guidance: inference not certainty; avoid asserting ground truth. Illustrative (non-exhaustive) example: 'This leads me to believe checklist formatting increases compliance and reduces reinterpretation, ...' (any plausible inference is acceptable)."
+        },
+        "promptFragment": {
+          "type": "string",
+          "description": "Optional exact substring of the prompt relevant to the observation."
+        },
+        "forExamples": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Concrete instantiations of the observation. Each entry is a 'For example' instance in natural text (not enforced by validator).",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["exampleId", "forExampleText"],
+            "properties": {
+              "exampleId": { "type": "string" },
+              "forExampleText": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Example text describing a concrete instance."
+              },
+              "references": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Optional lightweight evidence pointers as strings. Non-normative placeholder forms are recommended."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

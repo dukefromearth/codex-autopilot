@@ -1,0 +1,34 @@
+use the task-executor skill. Implement the MVP run viewer UI and server in examples/run-viewer.ts, update docs/run-data-ui.md, add flags/APIs, and ensure requirements are met without new deps or public API changes.
+
+Overall task: Implement an MVP run viewer UI for autopilot captures. Requirements: (1) Add a zero-deps viewer: a tiny Node HTTP server in examples/run-viewer.ts that serves a static HTML UI (no build step) and JSON APIs. (2) The UI information architecture must be: Run list (left) -> Exec list (middle) -> main panel with tabs: Overview, Graph, Output, Prompt, Events, Stderr, Transcript (Supplemental). (3) APIs (read-only, stream large files): GET /api/runs (scan runs/autopilot/*/manifest.json), GET /api/runs/:runId/manifest, GET /api/runs/:runId/file?path=<manifest-relative> (must validate path stays within the run folder), optional GET /api/transcript/:threadId (best-effort resolve ~/.codex/sessions/**/rollout-*-<threadId>.jsonl and stream it; if missing, return 404 with friendly message). Add a --codex-home flag to override default ~/.codex for transcripts. (4) In the UI, add 'Copy resume command' and 'Copy open transcript path' buttons where applicable. Resume command format: codex exec resume <threadId> "<prompt>". (5) Events tab: render events.jsonl incrementally (not loading entire file), with filter by event.type and text search. (6) Graph tab: render manifest.graph (nodes/edges) in a simple but clear way (table view is acceptable; optional SVG). Clicking a node jumps to the related exec and tab. (7) Update docs/run-data-ui.md with viewer usage: how to run it, what it reads, what is canonical vs supplemental, and security notes about serving local files. (8) No new runtime deps, minimal changes, do not change public APIs. (9) Run npm run typecheck and report results in final summary. If you touch tests or behavior, run npm run test.
+
+Dependency outputs (copy/paste; may be long):
+
+--- discover (succeeded) ---
+
+1) Research question  
+- Scan the repo to understand run data layout, existing examples/docs, and identify files/paths to touch for the run viewer UI requirements.
+
+2) Sources consulted  
+- `docs/run-data-ui.md`  
+- `examples/codex-autopilot.ts`  
+- `runs/autopilot/` (sample run folders)
+
+3) Findings  
+- The canonical description of autopilot run capture layout and manifest schema is documented in `docs/run-data-ui.md`, including the `runs/autopilot/<runId>/manifest.json` index and per-exec artifacts (`events.jsonl`, `stderr.txt`, `last_message.txt`, `prompt.txt`, `argv.json`, optional `schema.json`). `manifest.graph` includes nodes/edges/warnings for a lightweight provenance graph. citedocs/run-data-ui.md  
+- The autopilot runner in `examples/codex-autopilot.ts` defines the `RunManifest` and `GraphNode/GraphEdge` shapes and writes `manifest.json` into `runs/autopilot/<runId>/`, with `execs[].artifacts.*` being relative paths to the run folder. It also captures `events.jsonl` as raw stdout JSONL and `stderr.txt`, and it best-effort scans `~/.codex/sessions/**/rollout-*-<threadId>.jsonl` to enrich `manifest.graph`, recording warnings if transcripts are missing. citeexamples/codex-autopilot.ts  
+- The repo contains real captured runs under `runs/autopilot/` with the expected folder structure (run directory containing `manifest.json` and `exec-*` folders). This confirms the on-disk layout the viewer will read. citeruns/autopilot  
+
+4) Implications for the task  
+- The run viewer should treat `runs/autopilot/*/manifest.json` as the entry point for listing runs and navigation; artifact paths should always be resolved relative to the run folder as documented.  
+- The optional transcript lookup API can mirror the autopilot logic that scans `~/.codex/sessions/**/rollout-*-<threadId>.jsonl` and selects the newest match; this behavior is already established in `examples/codex-autopilot.ts`.  
+- UI tab content should be derived from manifest fields: `execs[].artifacts` for output/prompt/stderr/events; `graph` for the Graph tab.
+
+5) Open questions  
+- None.
+
+6) Assumptions  
+- None.
+
+If you make code changes, run the most relevant checks/tests and report results.
+Finish with a short 'Done' summary and any remaining risks.

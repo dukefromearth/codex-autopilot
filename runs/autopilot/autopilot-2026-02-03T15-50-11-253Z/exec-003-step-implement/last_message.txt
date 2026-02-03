@@ -1,0 +1,23 @@
+1) Objective
+- Implement provenance/call-graph capture across execs/threads, persist prompt/argv per exec, extend manifest, add transcript parsing, and update docs while keeping backward compatibility.
+
+2) Plan to execute
+- Extend autopilot manifest + per-exec artifacts and add graph helpers.
+- Wire graph edges (dependsOn/invokes/resume) and transcript enrichment.
+- Update run-data UI documentation and run typecheck.
+
+3) Changes
+- `examples/codex-autopilot.ts`: added execId/prompt/argv capture, manifest graph nodes/edges/warnings, workflow-derived edges, resume edges, transcript parsing for spawn/interact, and graph syncing.
+- `docs/run-data-ui.md`: documented prompt/argv artifacts, execId and graph fields, and provenance edge sources.
+
+4) Verification
+- `npm run typecheck`
+
+5) Results
+- Typecheck passed.
+- Provenance graph, per-exec prompt/argv capture, and transcript-based edges are implemented; docs updated.
+
+6) Questions / blockers
+- None
+
+Done. Remaining risk: transcript event shapes may vary; parsing is best-effort and will warn rather than fail.

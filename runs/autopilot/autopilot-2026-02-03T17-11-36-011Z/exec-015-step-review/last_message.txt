@@ -1,0 +1,16 @@
+1) Findings (ordered by severity)
+- `examples/run-viewer.ts:1016-1045` Path traversal check uses `path.resolve` + prefix match but does not guard against symlink escapes inside the run directory — a crafted artifact path or symlink in `runs/autopilot/<runId>` can expose files outside the run folder if the server is reachable. Suggested fix: resolve both the run directory and target with `fs.realpath` (or reject symlinks via `lstat`) and ensure the target realpath is within the run dir realpath before streaming.
+
+2) Missing tests or verification gaps
+- No tests for `/api/runs` listing (ordering, empty dir) or `/api/runs/:runId/manifest` success path.
+- No tests for the resume command formatting (escaping) or transcript 404 “friendly message” body.
+
+3) Questions / assumptions
+- None.
+
+4) Summary
+- Main risk is symlink-based path escape in the run file streaming endpoint.
+- Otherwise the MVP viewer and API surface look consistent with the stated requirements.
+- Tests reported by the user were not re-run by me; I’m relying on the provided output.
+
+Done. Remaining risks: symlink escape in `GET /api/runs/:runId/file` until mitigated.

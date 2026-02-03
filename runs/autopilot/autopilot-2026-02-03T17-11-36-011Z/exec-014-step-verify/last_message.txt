@@ -1,0 +1,19 @@
+1) Objective
+- Run `npm run typecheck` and `npm run test`, then report results and any failures or gaps.
+
+2) Verification plan
+- Run `npm run typecheck`
+- Run `npm run test`
+
+3) Commands run
+- `npm run typecheck`
+- `npm run test`
+
+4) Results
+- `npm run typecheck` passed.
+- `npm run test` passed (70 tests, 0 failures).
+
+5) Gaps / next steps
+- None.
+
+Done. Remaining risk: none.

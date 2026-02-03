@@ -1,0 +1,18 @@
+{
+  "runId": "autopilot-2026-02-03T17-43-47-668Z",
+  "startedAt": "2026-02-03T17:43:47.669Z",
+  "cwd": "/Users/duke/Documents/github/codex-multi-agent",
+  "options": {
+    "model": "gpt-5.2-codex",
+    "effort": "high",
+    "concurrency": 1,
+    "unsafe": false,
+    "search": false
+  },
+  "execs": [],
+  "graph": {
+    "nodes": [],
+    "edges": [],
+    "warnings": []
+  }
+}

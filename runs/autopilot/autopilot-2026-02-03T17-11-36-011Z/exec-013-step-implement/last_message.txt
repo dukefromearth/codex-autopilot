@@ -1,0 +1,27 @@
+1) Objective
+- Fix reviewer findings for the run viewer by adding abortable event streaming, strict route parsing, early 404s for missing files, and add minimal tests (plus docs update).
+
+2) Plan to execute
+- Tighten route parsing and file/transcript handling in `examples/run-viewer.ts`.
+- Add abortable event stream logic in the UI script.
+- Add minimal tests for traversal, transcript lookup with `--codex-home`, and abort logic.
+- Update docs and run required checks.
+
+3) Changes
+- `examples/run-viewer.ts`: strict route parsing, early `stat` checks for 404s, abortable event streaming in UI, exported helpers, and main-module guard.
+- `tests/runViewer.test.ts`: new tests for traversal rejection, transcript lookup with codex home, and event reload abort presence.
+- `docs/run-data-ui.md`: documented viewer API surface.
+
+4) Verification
+- `npm run typecheck`
+- `npm run test`
+
+5) Results
+- Typecheck and tests pass.
+- Viewer now aborts stale event streams, routes are strictly parsed, and missing files return 404 before streaming.
+- Tests cover traversal rejection, codex-home transcript lookup, and event abort logic (string-based check).
+
+6) Questions / blockers
+- None.
+
+Done. Summary: Added strict routing + early 404s, AbortController-driven event reload cancellation, new tests, and updated run viewer docs. Remaining risk: the event reload abort test asserts HTML content (not runtime behavior), so it won’t catch future DOM wiring regressions.

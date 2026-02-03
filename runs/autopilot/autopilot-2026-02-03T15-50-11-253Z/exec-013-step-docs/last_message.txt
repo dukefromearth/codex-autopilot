@@ -1,0 +1,21 @@
+1) Objective
+- Update run data UI docs to clarify invoke-edge behavior when reviewers supply a nextWorkflow, and verify with typecheck.
+
+2) Plan to execute
+- Review existing run-data UI docs and invoke-edge notes
+- Clarify reviewer-supplied nextWorkflow semantics in graph section
+- Run `npm run typecheck`
+
+3) Changes
+- `docs/run-data-ui.md` clarify that reviewer-supplied `nextWorkflow` skips a separate workflow-gen exec; completion-check invokes step execs directly.
+
+4) Verification
+- `npm run typecheck`
+
+5) Results
+- Typecheck passed.
+- Done: docs now explicitly describe reviewer-supplied nextWorkflow invoke-edge behavior.
+- Remaining risks: none noted.
+
+6) Questions / blockers
+- None

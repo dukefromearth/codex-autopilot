@@ -1,0 +1,22 @@
+1) Objective
+- Upgrade autopilot capture to enrich exec provenance graph, add reviewer-supplied workflow invokes edges, and document the graph updates.
+
+2) Plan to execute
+- Inspect autopilot runner + docs
+- Adjust invoke edge logic for reviewer-supplied workflows
+- Update run-data UI docs
+- Run typecheck
+
+3) Changes
+- `examples/codex-autopilot.ts` updated iteration flow to treat reviewer completion exec as workflow-gen when `nextWorkflow` is used, so invokes edges connect to step execs.
+- `docs/run-data-ui.md` documented the reviewer-supplied workflow-gen/invokes behavior.
+
+4) Verification
+- `npm run typecheck`
+
+5) Results
+- Typecheck passed.
+- Done: invokes edges now include reviewer-supplied nextWorkflow steps; docs reflect the graph semantics. Remaining risks: transcript enrichment still depends on local `~/.codex` availability (warnings are recorded when missing).
+
+6) Questions / blockers
+- None

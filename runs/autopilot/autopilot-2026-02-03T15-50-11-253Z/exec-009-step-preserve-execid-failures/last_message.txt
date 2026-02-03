@@ -1,0 +1,26 @@
+1) Objective
+- Upgrade autopilot capture to persist prompt/argv per exec, preserve failed exec IDs for graph edges, and document graph/manifest updates.
+
+2) Plan to execute
+- Inspect autopilot runner + docs
+- Implement error propagation to retain execId/threadId on failures
+- Update docs
+- Run typecheck
+
+3) Changes
+- `examples/codex-autopilot.ts` — added `CodexExecError` to carry execId/threadId/exitCode; step failure handling now preserves those IDs so graph edges can include failed steps.
+- `docs/run-data-ui.md` — clarified failed execs still get stable execIds for graph linkage.
+
+4) Verification
+- `npm run typecheck`
+
+5) Results
+- Typecheck passed.
+- Failed execs now retain execId/threadId in step results, enabling dependsOn/invokes edges for failures.
+- Docs updated with stable execId note for failed execs.
+
+6) Questions / blockers
+- None.
+
+Done
+- Remaining risks: transcript discovery is still best-effort and may miss collab edges if `~/.codex/sessions` is unavailable or logs are missing.

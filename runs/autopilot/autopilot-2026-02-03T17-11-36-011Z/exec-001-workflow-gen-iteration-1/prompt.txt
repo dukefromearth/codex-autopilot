@@ -1,0 +1,17 @@
+use the workflow-generator skill.
+
+Task: Implement an MVP run viewer UI for autopilot captures. Requirements: (1) Add a zero-deps viewer: a tiny Node HTTP server in examples/run-viewer.ts that serves a static HTML UI (no build step) and JSON APIs. (2) The UI information architecture must be: Run list (left) -> Exec list (middle) -> main panel with tabs: Overview, Graph, Output, Prompt, Events, Stderr, Transcript (Supplemental). (3) APIs (read-only, stream large files): GET /api/runs (scan runs/autopilot/*/manifest.json), GET /api/runs/:runId/manifest, GET /api/runs/:runId/file?path=<manifest-relative> (must validate path stays within the run folder), optional GET /api/transcript/:threadId (best-effort resolve ~/.codex/sessions/**/rollout-*-<threadId>.jsonl and stream it; if missing, return 404 with friendly message). Add a --codex-home flag to override default ~/.codex for transcripts. (4) In the UI, add 'Copy resume command' and 'Copy open transcript path' buttons where applicable. Resume command format: codex exec resume <threadId> "<prompt>". (5) Events tab: render events.jsonl incrementally (not loading entire file), with filter by event.type and text search. (6) Graph tab: render manifest.graph (nodes/edges) in a simple but clear way (table view is acceptable; optional SVG). Clicking a node jumps to the related exec and tab. (7) Update docs/run-data-ui.md with viewer usage: how to run it, what it reads, what is canonical vs supplemental, and security notes about serving local files. (8) No new runtime deps, minimal changes, do not change public APIs. (9) Run npm run typecheck and report results in final summary. If you touch tests or behavior, run npm run test.
+
+Output ONLY valid JSON for a workflow object with fields:
+- version (1)
+- id (string)
+- steps: array of { id, type:"agent.run", goal, dependsOn? }
+
+Rules:
+- Keep it small (<= 8 steps). Prefer parallel research → execute → verify → summarize.
+- Every step.goal MUST begin with: "use the <skill> skill."
+- Use only skills that exist in this workspace.
+- Use dependsOn to express data dependencies.
+- If iteration > 1, focus only on remaining work (do not repeat completed steps).
+
+Iteration: 1

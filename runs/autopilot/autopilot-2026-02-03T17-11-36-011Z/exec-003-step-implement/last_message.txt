@@ -1,0 +1,24 @@
+1) Objective
+- Implement a zero-deps autopilot run viewer UI + server with required APIs, update docs, and verify with typecheck/tests.
+
+2) Plan to execute
+- Inspect repo conventions and existing manifest schema.
+- Add `examples/run-viewer.ts` with HTTP server + static UI + APIs.
+- Update `docs/run-data-ui.md` with viewer usage and security notes.
+- Run `npm run typecheck` and `npm run test`.
+
+3) Changes
+- `examples/run-viewer.ts` added zero-deps HTTP server, UI, and APIs for runs, manifest, file streaming, and transcript lookup.
+- `docs/run-data-ui.md` documented viewer usage, data sources, and security cautions.
+
+4) Verification
+- `npm run typecheck`
+- `npm run test`
+
+5) Results
+- Server/UI, APIs, and docs implemented as specified; no new deps and no public API changes.
+- Done: MVP run viewer and docs updates complete; typecheck/test pass.
+- Remaining risks: Viewer serves local files; keep bound to localhost for safety.
+
+6) Questions / blockers
+- None

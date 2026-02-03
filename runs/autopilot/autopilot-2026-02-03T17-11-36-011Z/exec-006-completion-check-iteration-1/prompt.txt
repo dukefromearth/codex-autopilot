@@ -1,0 +1,44 @@
+use the reviewer skill.
+
+Task: Implement an MVP run viewer UI for autopilot captures. Requirements: (1) Add a zero-deps viewer: a tiny Node HTTP server in examples/run-viewer.ts that serves a static HTML UI (no build step) and JSON APIs. (2) The UI information architecture must be: Run list (left) -> Exec list (middle) -> main panel with tabs: Overview, Graph, Output, Prompt, Events, Stderr, Transcript (Supplemental). (3) APIs (read-only, stream large files): GET /api/runs (scan runs/autopilot/*/manifest.json), GET /api/runs/:runId/manifest, GET /api/runs/:runId/file?path=<manifest-relative> (must validate path stays within the run folder), optional GET /api/transcript/:threadId (best-effort resolve ~/.codex/sessions/**/rollout-*-<threadId>.jsonl and stream it; if missing, return 404 with friendly message). Add a --codex-home flag to override default ~/.codex for transcripts. (4) In the UI, add 'Copy resume command' and 'Copy open transcript path' buttons where applicable. Resume command format: codex exec resume <threadId> "<prompt>". (5) Events tab: render events.jsonl incrementally (not loading entire file), with filter by event.type and text search. (6) Graph tab: render manifest.graph (nodes/edges) in a simple but clear way (table view is acceptable; optional SVG). Clicking a node jumps to the related exec and tab. (7) Update docs/run-data-ui.md with viewer usage: how to run it, what it reads, what is canonical vs supplemental, and security notes about serving local files. (8) No new runtime deps, minimal changes, do not change public APIs. (9) Run npm run typecheck and report results in final summary. If you touch tests or behavior, run npm run test.
+Iteration: 1
+
+Here are the workflow results (JSON):
+{
+  "workflowId": "mvp-run-viewer-ui",
+  "results": [
+    {
+      "stepId": "discover",
+      "status": "succeeded",
+      "threadId": "019c247d-32d8-7f10-816d-ffc9f2e171b6",
+      "output": "1) Research question  \n- Scan the repo to understand run data layout, existing examples/docs, and identify files/paths to touch for the run viewer UI requirements.\n\n2) Sources consulted  \n- `docs/run-data-ui.md`  \n- `examples/codex-autopilot.ts`  \n- `runs/autopilot/` (sample run folders)\n\n3) Findings  \n- The canonical description of autopilot run capture layout and manifest schema is documented in `docs/run-data-ui.md`, including the `runs/autopilot/<runId>/manifest.json` index and per-exec artifacts (`events.jsonl`, `stderr.txt`, `last_message.txt`, `prompt.txt`, `argv.json`, optional `schema.json`). `manifest.graph` includes nodes/edges/warnings for a lightweight provenance graph. citedocs/run-data-ui.md  \n- The autopilot runner in `examples/codex-autopilot.ts` defines the `RunManifest` and `GraphNode/GraphEdge` shapes and writes `manifest.json` into `runs/autopilot/<runId>/`, with `execs[].artifacts.*` being relative paths to the run folder. It also captures `events.jsonl` as raw stdout JSONL and `stderr.txt`, and it best-effort scans `~/.codex/sessions/**/rollout-*-<threadId>.jsonl` to enrich `manifest.graph`, recording warnings if transcripts are missing. citeexamples/codex-autopilot.ts  \n- The repo contains real captured runs under `runs/autopilot/` with the expected folder structure (run directory containing `manifest.json` and `exec-*` folders). This confirms the on-disk layout the viewer will read. citeruns/autopilot  \n\n4) Implications for the task  \n- The run viewer should treat `runs/autopilot/*/manifest.json` as the entry point for listing runs and navigation; artifact paths should always be resolved relative to the run folder as documented.  \n- The optional transcript lookup API can mirror the autopilot logic that scans `~/.codex/sessions/**/rollout-*-<threadId>.jsonl` and selects the newest match; this behavior is already established in `examples/codex-autopilot.ts`.  \n- UI tab content should be derived from manifest fields: `execs[].artifacts` for output/prompt/stderr/events; `graph` for the Graph tab.\n\n5) Open questions  \n- None.\n\n6) Assumptions  \n- None."
+    },
+    {
+      "stepId": "implement",
+      "status": "succeeded",
+      "threadId": "019c247d-f512-7dd1-b2ba-dbd6103e3543",
+      "output": "1) Objective\n- Implement a zero-deps autopilot run viewer UI + server with required APIs, update docs, and verify with typecheck/tests.\n\n2) Plan to execute\n- Inspect repo conventions and existing manifest schema.\n- Add `examples/run-viewer.ts` with HTTP server + static UI + APIs.\n- Update `docs/run-data-ui.md` with viewer usage and security notes.\n- Run `npm run typecheck` and `npm run test`.\n\n3) Changes\n- `examples/run-viewer.ts` added zero-deps HTTP server, UI, and APIs for runs, manifest, file streaming, and transcript lookup.\n- `docs/run-data-ui.md` documented viewer usage, data sources, and security cautions.\n\n4) Verification\n- `npm run typecheck`\n- `npm run test`\n\n5) Results\n- Server/UI, APIs, and docs implemented as specified; no new deps and no public API changes.\n- Done: MVP run viewer and docs updates complete; typecheck/test pass.\n- Remaining risks: Viewer serves local files; keep bound to localhost for safety.\n\n6) Questions / blockers\n- None"
+    },
+    {
+      "stepId": "verify",
+      "status": "succeeded",
+      "threadId": "019c2482-6e7d-7c01-8115-43b5763ff0c4",
+      "output": "Using tester skill.\n\n1) Objective\n- Verify the MVP run viewer changes with `npm run typecheck` and `npm run test`.\n\n2) Verification plan\n- Run `npm run typecheck`.\n- Run `npm run test` because behavior changed.\n\n3) Commands run\n- `npm run typecheck`\n- `npm run test`\n\n4) Results\n- Pass: `npm run typecheck` completed with no errors.\n- Pass: `npm run test` completed with 67 tests passing.\n\n5) Gaps / next steps\n- None.\n\nDone: Typecheck and tests passed. Remaining risk: Viewer serves local files; keep server bound to localhost and treat as trusted-only."
+    },
+    {
+      "stepId": "review",
+      "status": "succeeded",
+      "threadId": "019c2482-b598-7432-bae0-9e14f474c06f",
+      "output": "1) Findings (ordered by severity)\n- `examples/run-viewer.ts:495-501` UI uses `innerHTML` with `runId` and timestamps from `manifest.json` — untrusted strings can inject HTML/JS into the local viewer, which can exfiltrate local data from the same origin — build DOM with `textContent` or run values through `escapeHtml` before interpolation.\n- `examples/run-viewer.ts:585-603` and `examples/run-viewer.ts:637-664` more `innerHTML` interpolation of `exec.label`, `threadId`, graph nodes/edges, and warnings — same XSS surface for any crafted labels or warnings — use DOM creation or escaping for each field.\n- `examples/run-viewer.ts:606-610` “Copy resume command” only escapes newlines and `\"` — prompts containing backslashes, `$`, backticks, or `\\` escapes can be interpreted by the shell, producing a different command or unintended expansions — either shell-escape fully, or wrap in single quotes with proper escaping of `'`, or provide a safe JSON `--prompt-file`/`@file` pattern if available.\n- `examples/run-viewer.ts:745-780` streaming events appends to `textContent` on every line — for large `events.jsonl` this can become O(n²) and freeze the UI, undermining “stream large files” — buffer chunks (array + `join` per chunk), or append to a `<pre>` via `appendChild(document.createTextNode(...))` to reduce reflow.\n\n2) Missing tests or verification gaps\n- No automated checks for API path traversal hardening (`/api/runs/:runId/file?path=…`) or transcript resolution/404 behavior.\n- No UI regression check for very large `events.jsonl` (performance/streaming).\n\n3) Questions / assumptions\n- None.\n\n4) Summary\n- Review focused on `examples/run-viewer.ts` and `docs/run-data-ui.md`; other modified files in `src/` and `tests/` were not reviewed.\n- Main risks: HTML injection via `innerHTML`, shell-unsafe resume command copy, and large-events performance.\n- Tests: I did not run them; relying on the provided outputs that `npm run typecheck` and `npm run test` passed.\n\nDone. Remaining risk: local-only server still executes unescaped HTML from manifests; tighten escaping before sharing viewers or binding to non-localhost."
+    }
+  ]
+}
+
+Return JSON ONLY with one of these shapes:
+1) {"done":true,"summary":"..."}
+2) {"done":false,"reason":"...","nextWorkflow":{...workflow json...}}
+
+Rules:
+- Be strict: done=true only if the task is actually completed.
+- If not done, provide a small nextWorkflow (<= 6 steps) that finishes the remaining work.
+- nextWorkflow steps should begin with: "use the <skill> skill."
