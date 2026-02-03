@@ -1,6 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 import { parseWorkflow } from "../src/workflow/parser.js";
+import { buildStepPrompt, buildWorkflowGenPrompt, buildCompletionCheckPrompt } from "../src/workflow/prompt.js";
+import type { StepResult } from "../src/workflow/types.js";
 
 describe("parseWorkflow", () => {
   it("parses valid workflow JSON", () => {
@@ -60,5 +62,62 @@ Let me know if you need changes.`;
     const workflow = parseWorkflow(input);
     assert.strictEqual(workflow.steps[0].id, "step-1");
     assert.strictEqual(workflow.steps[1].id, "step-2");
+  });
+});
+
+describe("buildStepPrompt", () => {
+  it("includes step goal and task", () => {
+    const prompt = buildStepPrompt(
+      { id: "impl", type: "agent.run", goal: "use the task-executor skill. Fix the bug." },
+      new Map(),
+      "Fix authentication bug"
+    );
+    assert.ok(prompt.includes("use the task-executor skill. Fix the bug."));
+    assert.ok(prompt.includes("Overall task: Fix authentication bug"));
+  });
+
+  it("includes dependency outputs", () => {
+    const completed = new Map<string, StepResult>([
+      ["research", {
+        stepId: "research",
+        status: "succeeded",
+        sessionId: "sess-1",
+        outputText: "Found the issue in auth.ts line 42",
+      }],
+    ]);
+    const prompt = buildStepPrompt(
+      { id: "impl", type: "agent.run", goal: "implement fix", dependsOn: ["research"] },
+      completed,
+      "Fix bug"
+    );
+    assert.ok(prompt.includes("--- research (succeeded) ---"));
+    assert.ok(prompt.includes("Found the issue in auth.ts line 42"));
+  });
+
+  it("handles empty dependency output", () => {
+    const completed = new Map<string, StepResult>([
+      ["empty", { stepId: "empty", status: "succeeded", sessionId: "s", outputText: "" }],
+    ]);
+    const prompt = buildStepPrompt(
+      { id: "next", type: "agent.run", goal: "continue", dependsOn: ["empty"] },
+      completed,
+      "task"
+    );
+    assert.ok(prompt.includes("(empty)"));
+  });
+});
+
+describe("buildWorkflowGenPrompt", () => {
+  it("includes task and iteration", () => {
+    const prompt = buildWorkflowGenPrompt("Build a feature", 1, "");
+    assert.ok(prompt.includes("use the workflow-generator skill"));
+    assert.ok(prompt.includes("Task: Build a feature"));
+    assert.ok(prompt.includes("Iteration: 1"));
+  });
+
+  it("includes carry summary when provided", () => {
+    const prompt = buildWorkflowGenPrompt("task", 2, "Previous: step1 failed");
+    assert.ok(prompt.includes("Context from previous iterations:"));
+    assert.ok(prompt.includes("Previous: step1 failed"));
   });
 });
