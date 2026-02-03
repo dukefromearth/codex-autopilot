@@ -6,7 +6,8 @@
     "node": ">=18"
   },
   "scripts": {
-    "autopilot": "node --import tsx examples/codex-autopilot.ts",
+    "autopilot": "node --import tsx src/index.ts",
+    "autopilot:legacy": "node --import tsx examples/codex-autopilot.ts",
     "viewer": "node --import tsx examples/run-viewer.ts --port 4141",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --import tsx --test tests/*.test.ts"
